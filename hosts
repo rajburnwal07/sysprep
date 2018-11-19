@@ -1,0 +1,9 @@
+[masters]
+master ansible_host=10.195.37.23 ansible_ssh_user=root ansible_ssh_pass=123qwe
+
+[workers]
+worker1 ansible_host=10.195.37.24 ansible_ssh_user=root ansible_ssh_pass=123qwe
+worker2 ansible_host=10.195.37.25 ansible_ssh_user=root ansible_ssh_pass=123qwe
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python2
