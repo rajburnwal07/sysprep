@@ -1,5 +1,5 @@
 ---
-- hosts: masters
+- hosts: workers
   become: yes
   become_method: su
   tasks:
@@ -14,21 +14,21 @@
     
     - name: copy server.xml to Tomcat conf
       copy:
-        src: /home/tomcat_conf/server.xml
+        src:  ${PWD}/sysprep/tomcat_conf/server.xml
         dest: /usr/share/tomcat/conf/server.xml
         remote_src: yes
         owner: root
    
     - name: copy context.xml to Tomcat conf
       copy:
-        src: /home/tomcat_conf/context.xml
+        src:  ${PWD}/sysprep/tomcat_conf/context.xml
         dest: /usr/share/tomcat/conf/context.xml
         remote_src: yes
         owner: root
     
     - name: copy ServerInfo.properties to Tomcat conf
       copy:
-        src: /home/tomcat_conf/org
+        src:  ${PWD}/sysprep/tomcat_conf/org
         dest: /usr/share/tomcat/lib/
         owner: root 
     
