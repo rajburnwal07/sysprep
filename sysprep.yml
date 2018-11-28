@@ -1,0 +1,86 @@
+---
+- hosts: all
+  become: yes
+  become_method: su
+  vars:
+    tomcat_url: "https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.32/bin/apache-tomcat-8.5.32.tar.gz"
+    java_url: "https://mirror.its.sfu.ca/mirror/CentOS-Third-Party/NSG/common/x86_64/jdk-7u80-linux-x64.rpm"
+  tasks:
+    - name: Installing Latest version of Wget
+      yum: pkg=wget state=latest
+    
+    - name: Downloading Java-1.7.80
+      get_url: url={{ java_url }} dest={{playbook_dir}}
+    
+    - name: Installing Java
+      shell: rpm -ivh {{playbook_dir}}/jdk-7u80-linux-x64.rpm
+      ignore_errors: yes
+    
+    - name: Downloading Tomcat-8.5.32
+      get_url: url={{ tomcat_url }} dest={{playbook_dir}}
+    
+    - name: Installing Tomcat
+      shell: tar xvzf {{playbook_dir}}/apache-tomcat-8.5.32.tar.gz
+    
+    - name: Configuring Tomcat
+      shell: "{{ item }}"
+      with_items: 
+        - mv apache-tomcat-8.5.32 /usr/share/tomcat
+        
+    - name: Making changes to catalina.sh file
+      lineinfile:
+          path: /usr/share/tomcat/bin/catalina.sh
+          insertafter: '^#!/bin/sh'
+          line: "{{ item.line }}"
+      with_items:
+          - {line: 'JAVA_OPTS="-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xms4096m -Xmx4096m -XX:NewSize=1024m -XX:MaxNewSize=1024m -XX:PermSize=2048m -XX:MaxPermSize=2048m -XX:+DisableExplicitGC"' }
+          - {line: 'export SYNERGY_HOME=/usr/share/tomcat/webapps/cloudblue' }
+          - {line: 'export CATALINA_HOME=/usr/share/tomcat' }
+          - {line: 'export JAVA_HOME=/usr/java/jdk1.7.0_80' }
+    
+    - name: Making changes to context.xml file to run Symbolic Link
+      lineinfile:
+          path: /usr/share/tomcat/conf/context.xml
+          insertafter: '^<Context>'
+          line: "{{ item.line }}"
+      with_items:
+          - {line: '<Resources allowLinking="true"/>' }
+    
+    - file:
+        path: /usr/share/tomcat/lib/org/apache/catalina/util
+        state: directory
+    
+    - name: Setting Apache Tomcat Version X
+      copy:
+        dest: "/usr/share/tomcat/lib/org/apache/catalina/util/ServerInfo.properties"
+        content: |
+          server.info=Apache Tomcat Version X    
+    
+    - name: Making changes to Server.xml
+      copy: src="server.xml" dest="/usr/share/tomcat/conf/server.xml"
+    
+    - name: Configure Tomcat to Run as a Service
+      copy:
+        dest: "/etc/init.d/tomcat"
+        content: |
+          #!/bin/bash   
+          JAVA_HOME=/usr/java/jdk1.7.0_80  
+          export JAVA_HOME  
+          PATH=$JAVA_HOME/bin:$PATH  
+          export PATH  
+          CATALINA_HOME=/usr/share/tomcat  
+              
+          case $1 in  
+          start)  
+          sh $CATALINA_HOME/bin/startup.sh  
+          ;;   
+          stop)     
+          sh $CATALINA_HOME/bin/shutdown.sh  
+          ;;   
+          restart)  
+          sh $CATALINA_HOME/bin/shutdown.sh  
+          sh $CATALINA_HOME/bin/startup.sh  
+          ;;   
+          esac      
+          exit 0
+        mode: 0777
