@@ -37,7 +37,7 @@
         - cp "{{ hostvars['master'].configured_file_location }}"/web.xml "{{ hostvars['master'].binary_location }}"/ESCM-DataFiles
 
 - name: Running a play in worker node
-  hosts: all
+  hosts: workers
   become: yes
   gather_facts: true
   tasks:

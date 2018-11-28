@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: workers
   become: yes
   become_method: su
   vars:
@@ -13,22 +13,28 @@
       yum: pkg=sshpass state=latest
     
     - name: Downloading Java-1.7.80
-      get_url: url={{ java_url }} dest={{playbook_dir}}
+      get_url: url={{ java_url }} dest=/tmp
     
     - name: Installing Java
-      shell: rpm -ivh {{playbook_dir}}/jdk-7u80-linux-x64.rpm
+      shell: rpm -ivh /tmp/jdk-7u80-linux-x64.rpm
       ignore_errors: yes
     
     - name: Downloading Tomcat-8.5.32
-      get_url: url={{ tomcat_url }} dest={{playbook_dir}}
+      get_url: url={{ tomcat_url }} dest=/tmp
     
     - name: Installing Tomcat
-      shell: tar xvzf {{playbook_dir}}/apache-tomcat-8.5.32.tar.gz
+      shell: tar xvzf /tmp/apache-tomcat-8.5.32.tar.gz -C /tmp
     
     - name: Configuring Tomcat
       shell: "{{ item }}"
       with_items: 
-        - mv apache-tomcat-8.5.32 /usr/share/tomcat
+        - mkdir -p /usr/share/tomcat
+        - rsync -r "/tmp/apache-tomcat-8.5.32/" "/usr/share/tomcat/"
+        - rm -rf /usr/share/tomcat/webapps/docs
+        - rm -rf /usr/share/tomcat/webapps/examples
+        - rm -rf /usr/share/tomcat/webapps/host-manager
+        - rm -rf /usr/share/tomcat/webapps/manager
+        - rm -rf /usr/share/tomcat/webapps/ROOT
         
     - name: Making changes to catalina.sh file
       lineinfile:
