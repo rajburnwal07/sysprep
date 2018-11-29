@@ -52,13 +52,13 @@
     - name: Copy Symbolic Link
       copy: src="{{ hostvars['master'].iso_binary_location }}/SymbolicLink/LinuxSymbolicLink.sh" dest="{{ hostvars['master'].catalina_home }}/"
     - lineinfile:
-        path: "{{ hostvars['master'].catalina_home }}"/LinuxSymbolicLink.sh
+        path: "{{ hostvars['master'].catalina_home }}/LinuxSymbolicLink.sh"
         regexp: '^SYNERGY_HOME='
         line: "SYNERGY_HOME={{ hostvars['master'].synergy_home }}"
     - lineinfile:
-        path: {{ hostvars['master'].catalina_home }}/LinuxSymbolicLink.sh
+        path: "{{ hostvars['master'].catalina_home }}/LinuxSymbolicLink.sh"
         regexp: '^CATALINA_HOME='
-        line: 'CATALINA_HOME={{ hostvars['master'].catalina_home }}'
+        line: "CATALINA_HOME={{ hostvars['master'].catalina_home }}"
     - name: Start Tomcat
       command: nohup /usr/share/tomcat/bin/startup.sh
       become: true
