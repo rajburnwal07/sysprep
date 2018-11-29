@@ -13,19 +13,31 @@
     - name: Installing rsync
       yum: pkg=rsync state=latest
     
+    - name: Checking Java-1.7.80 already downloaded
+      stat:
+        path: /tmp/jdk-7u80-linux-x64.rpm
+      register: stat_result
+    
     - name: Downloading Java-1.7.80
       get_url: url={{ java_url }} dest=/tmp
+      when: stat_result.stat.exists == False
     
     - name: Installing Java
       shell: rpm -ivh /tmp/jdk-7u80-linux-x64.rpm
       ignore_errors: yes
     
+    - name: Checking Tomcat-8.5.32 already downloaded
+      stat:
+        path: /tmp/apache-tomcat-8.5.32.tar.gz
+      register: stat_result
+    
     - name: Downloading Tomcat-8.5.32
       get_url: url={{ tomcat_url }} dest=/tmp
-    
+      when: stat_result.stat.exists == False
+      
     - name: Installing Tomcat
       shell: tar xvzf /tmp/apache-tomcat-8.5.32.tar.gz -C /tmp
-    
+       
     - name: Configuring Tomcat
       shell: "{{ item }}"
       with_items: 
