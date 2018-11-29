@@ -1,0 +1,75 @@
+---
+- name: Running a play in master node
+  hosts: master
+  become: yes
+  gather_facts: true
+  vars:
+    iso_binary_location: "{{ iso_binary_location }}"
+    configured_file_location: "{{ configured_file_location }}"
+  tasks:
+    - name: Setting Fact
+      set_fact:
+       synergy_home: "/usr/share/tomcat/webapps/cloudblue"
+       catalina_home: "/usr/share/tomcat"
+       binary_location: "/home/{{ ansible_ssh_user }}/EAS/AutoDeployment/Portal"
+       master_node_ip: "{{ ansible_host }}"
+       master_node_user: "{{ ansible_ssh_user }}"
+       master_node_password: "{{ ansible_ssh_pass }}"
+    - name: Create a directory for DataFiles Merging and WAR
+      command: mkdir -p /home/{{ ansible_ssh_user }}/EAS/AutoDeployment/Portal/webapps
+    - name: unzip order.zip
+      unarchive:
+        src: "{{ hostvars['master'].iso_binary_location }}/webapps/order.zip"
+        dest: "{{ hostvars['master'].iso_binary_location }}/webapps/"
+    - name: Rename the order.war
+      shell: mv "{{ hostvars['master'].iso_binary_location }}"/webapps/order.war "{{ hostvars['master'].binary_location }}"/webapps/cloudblue.war
+    - name: Copy the ESCM-Datafiles from ISO to Specific location
+      shell: rsync -r "{{ hostvars['master'].iso_binary_location }}/ESCM-DataFiles/" "{{ hostvars['master'].binary_location }}/ESCM-DataFiles/"
+    - name: Merge the pre-configured files with ESCM-Datafiles
+      shell: "{{ item }}" 
+      with_items: 
+        - cp "{{ hostvars['master'].configured_file_location }}"/synergy-DataSource.groovy "{{ hostvars['master'].binary_location }}"/ESCM-DataFiles
+        - cp "{{ hostvars['master'].configured_file_location }}"/easTaxConfig.xml "{{ hostvars['master'].binary_location }}"/ESCM-DataFiles
+        - cp "{{ hostvars['master'].configured_file_location }}"/synergy-Config.groovy "{{ hostvars['master'].binary_location }}"/ESCM-DataFiles
+        - cp "{{ hostvars['master'].configured_file_location }}"/ticketconfig.xml "{{ hostvars['master'].binary_location }}"/ESCM-DataFiles
+        - cp "{{ hostvars['master'].configured_file_location }}"/web.xml "{{ hostvars['master'].binary_location }}"/ESCM-DataFiles
+
+- name: Running a play in worker node
+  hosts: workers
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Stop Tomcat
+      command: sh /usr/share/tomcat/bin/shutdown.sh
+    - pause:
+        seconds: 30
+    - name: Copy WAR to Remote nodes
+      copy: src="{{ hostvars['master'].binary_location }}/webapps/cloudblue.war" dest="{{ hostvars['master'].catalina_home }}/webapps/"
+    - name: Copy ESCM-DataFiles to Remote nodes
+      shell: sshpass -p "{{ hostvars['master'].master_node_password }}" scp -o StrictHostKeyChecking=no -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ESCM-DataFiles" "{{ hostvars['master'].catalina_home }}/"
+    - name: Copy Symbolic Link
+      copy: src="{{ hostvars['master'].iso_binary_location }}/SymbolicLink/LinuxSymbolicLink.sh" dest="{{ hostvars['master'].catalina_home }}/"
+    - lineinfile:
+        path: "{{ hostvars['master'].catalina_home }}/LinuxSymbolicLink.sh"
+        regexp: '^SYNERGY_HOME='
+        line: "SYNERGY_HOME={{ hostvars['master'].synergy_home }}"
+    - lineinfile:
+        path: "{{ hostvars['master'].catalina_home }}/LinuxSymbolicLink.sh"
+        regexp: '^CATALINA_HOME='
+        line: "CATALINA_HOME={{ hostvars['master'].catalina_home }}"
+    - name: Start Tomcat
+      command: nohup /usr/share/tomcat/bin/startup.sh
+      become: true
+      become_user: root
+    - pause:
+        minutes: 5
+    - name: Stop Tomcat
+      command: sh /usr/share/tomcat/bin/shutdown.sh
+    - pause:
+        seconds: 30
+    - name: Run Symbolic link
+      shell: sh /usr/share/tomcat/LinuxSymbolicLink.sh
+    - name: Start Tomcat
+      command: nohup /usr/share/tomcat/bin/startup.sh
+      become: true
+      become_user: root
