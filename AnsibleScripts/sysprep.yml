@@ -12,6 +12,9 @@
     - name: Installing sshpass
       yum: pkg=sshpass state=latest
     
+    - name: Installing rsync
+      yum: pkg=rsync state=latest
+    
     - name: Downloading Java-1.7.80
       get_url: url={{ java_url }} dest=/tmp
     

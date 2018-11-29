@@ -10,9 +10,7 @@ sudo yum install -y python-pip python-wheel
 echo "Install Ansible and Azure SDKs via pip"
 sudo pip install ansible[azure]
 
-sudo yum install -y git
-sudo yum install -y unzip
-sudo yum install -y sshpass
+sudo yum install -y git unzip sshpass 
 
 echo "Installing docker"
 sudo yum install -y docker
