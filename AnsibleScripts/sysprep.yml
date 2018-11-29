@@ -8,10 +8,8 @@
   tasks:
     - name: Installing Latest version of Wget
       yum: pkg=wget state=latest
-    
     - name: Installing sshpass
       yum: pkg=sshpass state=latest
-    
     - name: Installing rsync
       yum: pkg=rsync state=latest
     
