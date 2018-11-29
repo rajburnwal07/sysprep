@@ -1,3 +1,4 @@
+---
 - name: Running a play in master node
   hosts: master
   become: yes
