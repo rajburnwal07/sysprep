@@ -11,6 +11,7 @@ echo "Install Ansible and Azure SDKs via pip"
 sudo pip install ansible[azure]
 
 sudo yum install -y git
+sudo yum install -y unzip
 
 echo "Installing docker"
 sudo yum install -y docker
