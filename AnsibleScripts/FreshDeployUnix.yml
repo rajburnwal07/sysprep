@@ -18,7 +18,7 @@
        master_node_user: "{{ ansible_ssh_user }}"
        master_node_password: "{{ ansible_ssh_pass }}"
     - name: Create a directory for DataFiles Merging and WAR
-      command: "mkdir -p /home/{{ ansible_ssh_user }}/EAS/AutoDeployment/Portal/webapps"
+      command: mkdir -p /home/{{ ansible_ssh_user }}/EAS/AutoDeployment/Portal/webapps
     - name: unzip order.zip
       unarchive:
         src: "{{ hostvars['master'].iso_binary_location }}/webapps/order.zip"
