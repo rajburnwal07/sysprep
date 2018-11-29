@@ -12,6 +12,7 @@ sudo pip install ansible[azure]
 
 sudo yum install -y git
 sudo yum install -y unzip
+sudo yum install -y sshpass
 
 echo "Installing docker"
 sudo yum install -y docker
