@@ -19,5 +19,5 @@ sudo systemctl enable docker && systemctl start docker
 sudo yum install -y java
 
 echo "Build Jenkins Docker Image"
-sudo docker build -f Dockerfile -t cmpjenkins:latest Jenkins/.
+sudo docker build -f Jenkins/Dockerfile -t cmpjenkins:latest Jenkins/.
 sudo docker run -itd -p 8282:8080 -p 50001:50000 -v jenkins-data:/var/jenkins_home --name=jenkins-cmp cmpjenkins
