@@ -58,7 +58,7 @@
     - lineinfile:
         path: {{ hostvars['master'].catalina_home }}/LinuxSymbolicLink.sh
         regexp: '^CATALINA_HOME='
-        line: "CATALINA_HOME={{ hostvars['master'].catalina_home }}"
+        line: 'CATALINA_HOME={{ hostvars['master'].catalina_home }}'
     - name: Start Tomcat
       command: nohup /usr/share/tomcat/bin/startup.sh
       become: true
