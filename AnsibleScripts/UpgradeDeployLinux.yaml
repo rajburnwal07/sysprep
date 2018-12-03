@@ -1,0 +1,107 @@
+- name: Running a play in master node
+  hosts: master
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Setting Fact
+      set_fact:
+       iso_binary_location: "/root/EAS_5.2/ISO/Portal/EAS_5.2/"
+       configured_file_location: "/root/PreConfiguredFiles/"
+
+       synergy_home: "/usr/share/tomcat/webapps/cloudblue"
+       catalina_home: "/usr/share/tomcat"
+       binary_location: "/home/{{ ansible_ssh_user }}/EAS/AutoDeployment/Portal"
+       master_node_ip: "{{ ansible_host }}"
+       master_node_user: "{{ ansible_ssh_user }}"
+       master_node_password: "{{ ansible_ssh_pass }}"
+       java_file_location: "/root/EAS_5.2/ISO/Utilities/JAVAFile/"
+       backup_location: "/home/BACKUP"
+    - name: unzip order.zip
+      unarchive:
+        src: "{{ hostvars['master'].iso_binary_location }}/webapps/order.zip"
+        dest: "{{ hostvars['master'].iso_binary_location }}/webapps/"
+    - name: Rename the order.war
+      shell: mv "{{ hostvars['master'].iso_binary_location }}"/webapps/order.war "{{ hostvars['master'].binary_location }}"/webapps/cloudblue.war
+
+
+- name: Running a play in worker node
+  hosts: workers
+  become: yes
+  gather_facts: true
+  vars:
+    date_time: "{{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
+  tasks:
+    - name: Stop Tomcat
+      command: sh /usr/share/tomcat/bin/shutdown.sh
+    - pause:
+        seconds: 30
+
+
+    - name: Copy WAR to Remote nodes
+      copy: src="{{ hostvars['master'].binary_location }}/webapps/cloudblue.war" dest="{{ hostvars['master'].catalina_home }}/webapps/"
+
+
+
+    - name: Create a directory for ESCM-DataFiles backup
+      command: mkdir -p /home/BACKUP
+    - name: Take Backup of Current ESCM-DataFiles with date and time in each node
+      shell: rsync -r "{{ hostvars['master'].catalina_home }}"/ESCM-DataFiles /home/BACKUP/ESCM-DataFiles_backup_{{date_time}}/
+
+    - name: Create a directory for ESCM-DataFiles Merging
+      command: mkdir -p /home/Compare_DataFiles
+    - name:  Remove ESCM-Datafiles_existing directory from Backup directory if Exist
+      shell: if [ -d /home/Compare_DataFiles/ESCM-DataFiles_existing ]; then rm -rf /home/Compare_DataFiles/ESCM-DataFiles_existing; fi
+    - name: Taking Backup of ESCM-Datafiles for Merging
+      shell: rsync -r "{{ hostvars['master'].catalina_home }}"/ESCM-DataFiles/ /home/Compare_DataFiles/ESCM-DataFiles_existing 
+
+    - name: Remove ESCM-Datafiles_latest directory from Backup directory if Exist
+      shell: if [ -d /home/Compare_DataFiles/ESCM-DataFiles_latest ]; then rm -rf /home/Compare_DataFiles/ESCM-DataFiles_latest; fi
+    - pause:
+        seconds: 30
+    - name: Copy latest ESCM-DataFiles from ISO to Remote nodes
+      shell: sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].iso_binary_location }}/ESCM-DataFiles" /home/Compare_DataFiles/ESCM-DataFiles_latest
+
+    - name: Copy latest Branding folder to existing ESCM-DataFiles for ESCM-DataFiles merging
+      shell: rsync -r /home/Compare_DataFiles/ESCM-DataFiles_latest/branding/ /home/Compare_DataFiles/ESCM-DataFiles_existing/branding/
+    - name: Remove the Branding folder from latest ESCM-Datafiles after succesful copy
+      shell: rm -rf /home/Compare_DataFiles/ESCM-DataFiles_latest/branding
+    - name: Remove the configuration files if any
+      shell: "{{ item }}"
+      with_items:
+        - rm -f /home/Compare_DataFiles/ESCM-DataFiles_latest/synergy-DataSource.groovy
+        - rm -f /home/Compare_DataFiles/ESCM-DataFiles_latest/synergy-Config.groovy   
+        - rm -f /home/Compare_DataFiles/ESCM-DataFiles_latest/easTaxConfig.xml   
+        - rm -f /home/Compare_DataFiles/ESCM-DataFiles_latest/synergy.properties
+        - rm -f /home/Compare_DataFiles/ESCM-DataFiles_latest/ticketconfig.xml
+        - rm -f /home/Compare_DataFiles/ESCM-DataFiles_latest/web.xml  
+
+    - name: Copy JAVA file to remote nodes for comparing ESCM-DataFiles
+      copy: src="{{ hostvars['master'].java_file_location }}/" dest="/home/Compare_DataFiles/"
+
+    - name: Executing the JAVA command for extracting the Delta-Datafiles
+      args:
+        chdir: /home/Compare_DataFiles
+      command: java CompareFile "/home/Compare_DataFiles/ESCM-DataFiles_existing" "/home/Compare_DataFiles/ESCM-DataFiles_latest"
+    - name: Merging Delta Datafiles with the existing customized ESCM-Datafiles
+      shell: rsync -r /home/Compare_DataFiles/ESCM-DataFiles_latest/ /home/Compare_DataFiles/ESCM-DataFiles_existing/
+
+    - name: Copy Merged ESCM-DataFiles to catalina_home location
+      shell: rsync -r /home/Compare_DataFiles/ESCM-DataFiles_existing/ "{{ hostvars['master'].catalina_home }}/ESCM-DataFiles/"
+
+    - name: Start Tomcat
+      command: nohup /usr/share/tomcat/bin/startup.sh
+      become: true
+      become_user: root
+    - pause:
+        minutes: 5
+    - name: Stop Tomcat
+      command: sh /usr/share/tomcat/bin/shutdown.sh
+    - pause:
+        seconds: 30
+    - name: Run Symbolic link
+      shell: sh /usr/share/tomcat/LinuxSymbolicLink.sh
+    - name: Start Tomcat
+      command: nohup /usr/share/tomcat/bin/startup.sh
+      become: true
+      become_user: root
+
