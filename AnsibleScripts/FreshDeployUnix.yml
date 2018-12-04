@@ -42,8 +42,10 @@
       command: sh /usr/share/tomcat/bin/shutdown.sh
     - pause:
         seconds: 30
-	- name: Remove WAR folder
-	  shell: rm -rf "{{ hostvars['master'].catalina_home }}/webapps/cloudblue"
+
+    - name: Remove WAR folder
+      shell: rm -rf "{{ hostvars['master'].catalina_home }}/webapps/cloudblue"
+
     - name: Copy WAR to Remote nodes
       copy: src="{{ hostvars['master'].binary_location }}/webapps/cloudblue.war" dest="{{ hostvars['master'].catalina_home }}/webapps/"
     - name: Copy ESCM-DataFiles to Remote nodes
