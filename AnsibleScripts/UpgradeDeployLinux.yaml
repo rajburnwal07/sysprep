@@ -36,6 +36,12 @@
     - pause:
         seconds: 30
 
+    - name: Remove WAR folder
+      shell: rm -rf "{{ hostvars['master'].synergy_home }}"
+
+    - pause:
+        seconds: 30
+
 
     - name: Copy WAR to Remote nodes
       copy: src="{{ hostvars['master'].binary_location }}/webapps/cloudblue.war" dest="{{ hostvars['master'].catalina_home }}/webapps/"
@@ -61,6 +67,8 @@
     - name: Copy latest ESCM-DataFiles from ISO to Remote nodes
       shell: sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].iso_binary_location }}/ESCM-DataFiles" /home/Compare_DataFiles/ESCM-DataFiles_latest
 
+    - pause:
+        seconds: 30
     - name: Copy latest Branding folder to existing ESCM-DataFiles for ESCM-DataFiles merging
       shell: rsync -r /home/Compare_DataFiles/ESCM-DataFiles_latest/branding/ /home/Compare_DataFiles/ESCM-DataFiles_existing/branding/
     - name: Remove the Branding folder from latest ESCM-Datafiles after succesful copy
