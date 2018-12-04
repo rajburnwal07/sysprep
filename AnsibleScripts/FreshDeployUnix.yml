@@ -44,7 +44,7 @@
         seconds: 30
 
     - name: Remove WAR folder
-      shell: rm -rf "{{ hostvars['master'].catalina_home }}/webapps/cloudblue"
+      shell: rm -rf "{{ hostvars['master'].synergy_home }}"
 
     - name: Copy WAR to Remote nodes
       copy: src="{{ hostvars['master'].binary_location }}/webapps/cloudblue.war" dest="{{ hostvars['master'].catalina_home }}/webapps/"
