@@ -14,16 +14,20 @@ RUN chown jenkins:jenkins /usr/share/jenkins/jenkins.war
 
 
 # Name the jobs  
-ARG job_name_1="EASDeployLinux"  
+ARG job_name_1="EASDeployLinux"
+ARG job_name_2="EAS_Upgrade_Deploy_Linux" 
 
 # Create the job workspaces  
-RUN mkdir -p "$JENKINS_HOME"/workspace/${job_name_1}  
+RUN mkdir -p "$JENKINS_HOME"/workspace/${job_name_1}
+RUN mkdir -p "$JENKINS_HOME"/workspace/${job_name_2}
 
 # Create the jobs folder recursively  
-RUN mkdir -p "$JENKINS_HOME"/jobs/${job_name_1}  
+RUN mkdir -p "$JENKINS_HOME"/jobs/${job_name_1} 
+RUN mkdir -p "$JENKINS_HOME"/jobs/${job_name_2}
 
 # Add the custom configs to the container  
-COPY /configs/${job_name_1}_config.xml "$JENKINS_HOME"/jobs/${job_name_1}/config.xml  
+COPY /configs/${job_name_1}_config.xml "$JENKINS_HOME"/jobs/${job_name_1}/config.xml
+COPY /configs/${job_name_2}_config.xml "$JENKINS_HOME"/jobs/${job_name_2}/config.xml  
 
 ENV JAVA_OPTS}                                   \
  -Dhudson.udp=-1                                 \
