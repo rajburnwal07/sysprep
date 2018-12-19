@@ -13,7 +13,7 @@
        master_node_ip: "{{ ansible_host }}"
        master_node_user: "{{ ansible_ssh_user }}"
        master_node_password: "{{ ansible_ssh_pass }}"
-       java_file_location: "/Binaries/EAS_5.2/ISO/Utilities/JAVAFile/"
+       java_file_location: "{{ iso_binary_location }}"
        backup_location: "/home/BACKUP"
     - name: unzip order.zip
       unarchive:
