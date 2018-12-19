@@ -83,7 +83,7 @@
         - rm -f /home/Compare_DataFiles/ESCM-DataFiles_latest/web.xml  
 
     - name: Copy JAVA file to remote nodes for comparing ESCM-DataFiles
-      copy: src="{{ hostvars['master'].java_file_location }}/" dest="/home/Compare_DataFiles/"
+      copy: src="{{ hostvars['master'].java_file_location }}/CompareFile.class" dest="/home/Compare_DataFiles/"
 
     - name: Executing the JAVA command for extracting the Delta-Datafiles
       args:
