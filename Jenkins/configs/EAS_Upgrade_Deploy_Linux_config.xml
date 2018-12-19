@@ -58,7 +58,7 @@ unzip -o $iso_binary_location/ISO/Portal/$ISO_Name.zip -d $iso_binary_location/I
 
 echo &quot;Deploying Application&quot;
 export ANSIBLE_HOST_KEY_CHECKING=False
-ansible-playbook -i $ansible_host_file_location/hosts ./AnsibleScripts/UpgradeDeployLinux.yaml -e iso_binary_location=$iso_binary_location/ISO/Portal/$ISO_Name -e java_file_location=$iso_binary_location/ISO/Utilities</command>
+ansible-playbook -i $ansible_host_file_location/hosts ./AnsibleScripts/UpgradeDeployLinux.yaml -e iso_binary_location=$iso_binary_location/ISO/Portal/$ISO_Name -e java_file_location=$iso_binary_location/ISO/Utilities/JAVAFile</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
