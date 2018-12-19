@@ -5,8 +5,8 @@
   tasks:
     - name: Setting Fact
       set_fact:
-       iso_binary_location: "/root/EAS_5.2/ISO/Portal/EAS_5.2/"
-       configured_file_location: "/root/PreConfiguredFiles/"
+       iso_binary_location: "{{ iso_binary_location }}"
+       configured_file_location: "{{ ansible_host_file_location }}"
 
        synergy_home: "/usr/share/tomcat/webapps/cloudblue"
        catalina_home: "/usr/share/tomcat"
