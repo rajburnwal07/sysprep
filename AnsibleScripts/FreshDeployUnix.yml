@@ -66,14 +66,14 @@
       become_user: root
     - pause:
         minutes: 5
-    - name: Stop Tomcat
-      command: sh /usr/share/tomcat/bin/shutdown.sh
-    - pause:
-        seconds: 30
-    - name: Run Symbolic link
-      shell: sh /usr/share/tomcat/LinuxSymbolicLink.sh
-    - name: Start Tomcat
-      command: nohup /usr/share/tomcat/bin/startup.sh
-      become: true
-      become_user: root
+    # - name: Stop Tomcat
+      # command: sh /usr/share/tomcat/bin/shutdown.sh
+    # - pause:
+        # seconds: 30
+    # - name: Run Symbolic link
+      # shell: sh /usr/share/tomcat/LinuxSymbolicLink.sh
+    # - name: Start Tomcat
+      # command: nohup /usr/share/tomcat/bin/startup.sh
+      # become: true
+      # become_user: root
 
