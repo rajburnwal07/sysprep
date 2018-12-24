@@ -1,0 +1,148 @@
+- name: Running a play in master node
+  hosts: master
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Setting Fact
+      set_fact:
+       iso_binary_location: "{{ iso_binary_location }}"
+
+       synergy_home: "/usr/share/tomcat/webapps/cloudblue"
+       catalina_home: "/usr/share/tomcat"
+       binary_location: "/home/{{ ansible_ssh_user }}/EAS/AutoDeployment/Portal"
+       master_node_ip: "{{ ansible_host }}"
+       master_node_user: "{{ ansible_ssh_user }}"
+       master_node_password: "{{ ansible_ssh_pass }}"
+       java_file_location: "{{ iso_binary_location }}"
+       backup_location: "/home/BACKUP"
+    - name:  Remove binary_location directory if Exist
+      shell: if [ -d "{{ hostvars['master'].binary_location }}"/webapps/* ]; then rm -rf "{{ hostvars['master'].binary_location }}"/webapps/*; fi
+    - name: unzip order.zip
+      unarchive:
+        src: "{{ hostvars['master'].iso_binary_location }}/webapps/order.zip"
+        dest: "{{ hostvars['master'].iso_binary_location }}/webapps/"
+    - name: Rename the order.war
+      shell: mv "{{ hostvars['master'].iso_binary_location }}"/webapps/order.war "{{ hostvars['master'].binary_location }}"/webapps/cloudblue.war
+
+
+- name: Running a play in worker node
+  hosts: workers
+  become: yes
+  gather_facts: true
+  vars:
+    date_time: "{{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
+  tasks:
+    - name: Stop Tomcat
+      command: sh /usr/share/tomcat/bin/shutdown.sh
+    - pause:
+        seconds: 30
+    - name: Create a directory for WAR backup
+      command: mkdir -p /home/BACKUP
+    - name: Create a directory for WAR Merging
+      command: mkdir -p /home/Compare_War
+      
+    - name:  Remove new_war directory from Backup directory if Exist
+      shell: if [ -d /home/Compare_War/new_war ]; then rm -rf /home/Compare_War/new_war; fi
+      
+    - name: Copy WAR to Remote nodes for Merging
+      copy: src="{{ hostvars['master'].binary_location }}/webapps/cloudblue.war" dest="/home/Compare_War/new_war/"
+      
+    - name: Extracting New War in each node
+      args:
+        chdir: /home/Compare_War/new_war
+      shell: "{{ item }}"
+      with_items:
+        - jar -xvf "/home/Compare_War/new_war/cloudblue.war"
+        - rm -rf /home/Compare_War/new_war/cloudblue.war
+
+    - name: Take Backup of Current War with date and time in each node
+      shell: rsync -r "{{ hostvars['master'].synergy_home }}" /home/BACKUP/war_backup_{{date_time}}/
+
+    - name:  Remove old_war directory from Backup directory if Exist
+      shell: if [ -d /home/Compare_War/old_war ]; then rm -rf /home/Compare_War/old_war; fi
+      
+    - name: Taking Backup of old_war for Merging
+      shell: rsync -r "{{ hostvars['master'].catalina_home }}"/webapps/cloudblue/ /home/Compare_War/old_war/ 
+
+    - pause:
+        seconds: 30
+        
+    - name: Copy latest Branding folder to existing WAR before merging
+      shell: rsync -r /home/Compare_War/new_war/branding/ /home/Compare_War/old_war/branding/
+
+    - name: Remove the files/dir if any not needed for merging
+      shell: "{{ item }}"
+      with_items:
+        - rm -rf /home/Compare_War/new_war/branding
+        - rm -rf /home/Compare_War/new_war/jquery-ui
+        - rm -rf /home/Compare_War/new_war/js
+        - rm -rf /home/Compare_War/new_war/META-INF
+        - rm -rf /home/Compare_War/new_war/reports
+        - rm -rf /home/Compare_War/new_war/synergy-DataSource.groovy
+        - rm -rf /home/Compare_War/new_war/synergy-Config.groovy
+        - rm -rf /home/Compare_War/new_war/synergy.properties
+        - rm -rf /home/Compare_War/new_war/WEB-INF/classes
+        - rm -rf /home/Compare_War/new_war/WEB-INF/grails-app/views
+        - rm -rf /home/Compare_War/new_war/WEB-INF/plugins
+        - rm -rf /home/Compare_War/new_war/WEB-INF/spring
+        - rm -rf /home/Compare_War/new_war/WEB-INF/templates
+        - rm -rf /home/Compare_War/new_war/WEB-INF/tld
+        - rm -rf /home/Compare_War/new_war/WEB-INF/applicationContext.xml
+        - rm -rf /home/Compare_War/new_war/WEB-INF/grails.xml
+        - rm -rf /home/Compare_War/new_war/WEB-INF/sitemesh.xml
+        - rm -rf /home/Compare_War/old_war/jquery-ui
+        - rm -rf /home/Compare_War/old_war/js
+        - rm -rf /home/Compare_War/old_war/META-INF
+        - rm -rf /home/Compare_War/old_war/reports
+        - rm -rf /home/Compare_War/old_war/synergy-DataSource.groovy
+        - rm -rf /home/Compare_War/old_war/synergy-Config.groovy
+        - rm -rf /home/Compare_War/old_war/synergy.properties
+        - rm -rf /home/Compare_War/old_war/WEB-INF/classes
+        - rm -rf /home/Compare_War/old_war/WEB-INF/grails-app/views
+        - rm -rf /home/Compare_War/old_war/WEB-INF/plugins
+        - rm -rf /home/Compare_War/old_war/WEB-INF/spring
+        - rm -rf /home/Compare_War/old_war/WEB-INF/templates
+        - rm -rf /home/Compare_War/old_war/WEB-INF/tld
+        - rm -rf /home/Compare_War/old_war/WEB-INF/applicationContext.xml
+        - rm -rf /home/Compare_War/old_war/WEB-INF/grails.xml
+        - rm -rf /home/Compare_War/old_war/WEB-INF/sitemesh.xml
+
+
+    - name: Copy JAVA file to remote nodes for comparing ESCM-DataFiles
+      copy: src="{{ hostvars['master'].java_file_location }}/CompareFile.class" dest="/home/Compare_War/"
+
+    - name: Executing the JAVA command for extracting the Delta-WAR
+      args:
+        chdir: /home/Compare_War
+      command: java CompareFile "/home/Compare_War/old_war" "/home/Compare_War/new_war"
+      
+    - name: Merging Delta WAR with the existing customized WAR
+      shell: rsync -r /home/Compare_War/new_war/ /home/Compare_War/old_war/
+      
+    - name: Remove WAR folder from SYNERGY HOME Location
+      shell: "{{ item }}"
+      with_items:
+        - rm -rf "{{ hostvars['master'].synergy_home }}" 
+        - rm -rf "{{ hostvars['master'].synergy_home }}.war" 
+    
+    - name: Copy WAR to Remote nodes for Deploying
+      copy: src="{{ hostvars['master'].binary_location }}/webapps/cloudblue.war" dest="{{ hostvars['master'].catalina_home }}/webapps/"
+      
+    - name: Start Tomcat
+      command: nohup /usr/share/tomcat/bin/startup.sh
+      become: true
+      become_user: root
+    - pause:
+        minutes: 5
+    - name: Stop Tomcat
+      command: sh /usr/share/tomcat/bin/shutdown.sh
+    - pause:
+        seconds: 30
+        
+    - name: Copy Merged WAR to synergy_home location
+      shell: rsync -r /home/Compare_War/old_war/ "{{ hostvars['master'].synergy_home }}/"
+
+    - name: Start Tomcat
+      command: nohup /usr/share/tomcat/bin/startup.sh
+      become: true
+      become_user: root
