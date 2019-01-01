@@ -4,7 +4,8 @@
 # read -p "Provide Order.zip Location. i.e: /home/DF2WAR/CB_10.0/ISO/Portal/CB_10.0/webapps/: "  order_location
 # echo "order_location: $order_location"
 
-order_location=/home/Deployment/CB_10.0/webapps/order.zip
+# order_location=/home/Deployment/CB_10.0/webapps/order.zip
+order_location=$1
 
 ################### User variables ###################
 SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
