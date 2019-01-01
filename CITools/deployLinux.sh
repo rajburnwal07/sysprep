@@ -6,6 +6,7 @@
 
 # order_location=/home/Deployment/CB_10.0/webapps/order.zip
 order_location=$1
+echo order_location: $order_location
 
 ################### User variables ###################
 SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
@@ -198,7 +199,7 @@ echo "flag: $flag"
 echo "Extracting Order.zip"
 war_location="$(dirname "$0")"
 echo "war_location $war_location"
-unzip -o "$order_location" -d $war_location
+unzip -o "$order_location" -d "$war_location"
 if [ "$?" != "0" ]; then
     echo "[Error] order.zip unzip failed!"
     exit 1
