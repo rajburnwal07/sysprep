@@ -5,16 +5,13 @@ echo "**************************************************************************
 
 REM SET /P order_location="Please provide ISO [war-file location (till webapps)]: "  
 
-REM if "%~1"=="" (
-    REM echo No parameters have been provided.
-	REM echo Provide Order.zip Location. i.e: D:\CB_10.0\ISO\Portal\CB_10.0\webapps
-	REM goto :EOF
-REM )
+if "%~1"=="" (
+    echo No parameters have been provided.
+	echo Provide Order.zip Location. i.e: D:\CB_10.0\ISO\Portal\CB_10.0\webapps
+	goto :EOF
+)
 
-REM set order_location=%1%
-set order_location="D:\Ensim Automation Suite\CB-10\CB_10.0\ISO\Portal\CB_10.0\webapps"
-REM set order_location="D:\Ensim Automation Suite\EAS-5.2\EAS_5.2\ISO\Portal\EAS_5.2\webapps"
-REM set order_location="D:\Ensim Automation Suite\EAS-4.8\RTO\EAS_4.8\ISO\Portal\EAS_4.8\webapps"
+set order_location=%1%
 echo order_location: %order_location%
 
 ::################### User variables ###################
