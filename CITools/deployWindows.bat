@@ -292,7 +292,7 @@ exit /b
 
 ::****************** Copying New WAR For Merging Function *********************#
 :new_war_copy
-echo "Copying New WAR For Merging"
+	echo "Copying New WAR For Merging"
 	echo Removing Exsisting WAR
 	rd %SYNERGY_HOME% /s /q
 	if NOT %ERRORLEVEL% == 0 (
@@ -316,6 +316,10 @@ echo "Copying New WAR For Merging"
 	del "%current_dir%\order.war"
 	echo Extracting New WAR
 	unzip -o "%SYNERGY_HOME%.war" -d "%SYNERGY_HOME%"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Unzip failed!"
+		call :restore
+	)
 	
 	echo "Copying New %compare_list% from SYNERGY_HOME for Merging"
 	For %%i in (%compare_list%) do (
@@ -369,7 +373,7 @@ exit /b
 	cd "%Compare_War_location%"
 	"%JAVA_HOME%\bin\java" CompareFile "%source_dir%" "%dest_dir%"
 	if NOT %ERRORLEVEL% == 0 (
-		echo "[Error] Merging failed!"
+		echo "[Error] Comparing failed!"
 		call :restore
 	)
 	
