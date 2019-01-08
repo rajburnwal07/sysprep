@@ -23,7 +23,7 @@ REM set CATALINA_HOME="/usr/share/tomcat"
 ::################### Initializing variables ###################
 set current_dir=%cd%
 set Compare_War_location=%current_dir%\Compare_War
-set BACKUP_DIRECTORY_NAME=%date%_%time:~0,2%_%time:~3,2%_%time:~6,2%
+set BACKUP_DIRECTORY_NAME=%time:~0,2%_%time:~3,2%_%time:~6,2%
 set Backup_location=%current_dir%\BACKUP\%BACKUP_DIRECTORY_NAME%
 set compare_list=branding,css,images,plugins,resources,lib,i18n
 ::##############################################################
