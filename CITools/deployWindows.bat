@@ -1,5 +1,6 @@
-@ECHO OFF
+REM @ECHO OFF
 SETLOCAL ENABLEEXTENSIONS
+setlocal enabledelayedexpansion
 
 echo "***********************************************************************************************"
 
@@ -91,6 +92,12 @@ cd %order_location%
 cd ..
 set "DataFiles_location=%cd%"
 echo DataFiles_location: %DataFiles_location%
+::############ Get ESCM-DataFiles location if UNC path provided ##########
+for /f "tokens=*" %%a in ("%order_location%") do (
+set DataFiles_location=%%a
+set DataFiles_location=!DataFiles_location:~0,-7!
+)
+echo DataFiles_location: %DataFiles_location%
 ::############ Get APP Name from SYNERGY_HOME ##########
 for %%f in (%SYNERGY_HOME%) do set appname=%%~nxf
 echo APP Name: %appname%
@@ -161,9 +168,12 @@ exit /b
 		pause
 		exit 1
 	)
-	
-	xcopy %SYNERGY_HOME% "%Backup_location%\%appname%" /HEYI
-	if NOT %ERRORLEVEL% == 0 (
+	echo error: %ERRORLEVEL%
+	pause
+	robocopy %SYNERGY_HOME% "%Backup_location%\%appname%" /s /e
+	echo error: %ERRORLEVEL%
+	pause
+	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] Backup failed!"
 		pause
 		exit 1
@@ -171,8 +181,8 @@ exit /b
 
 	copy "%SYNERGY_HOME%.war" "%Backup_location%"
 
-	xcopy "%CATALINA_HOME%\ESCM-DataFiles" "%Backup_location%\ESCM-DataFiles" /HEYI 
-	if NOT %ERRORLEVEL% == 0 (
+	robocopy "%CATALINA_HOME%\ESCM-DataFiles" "%Backup_location%\ESCM-DataFiles" /s /e 
+	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] Backup failed!"
 		pause
 		exit 1
@@ -184,7 +194,7 @@ exit /b
 ::****************** Restore War/ESCM-DataFiles Function *********************#
 :restore
 	echo "Restoring to previous state"
-	xcopy "%Backup_location%\%appname%" "%CATALINA_HOME%\webapps\%appname%"  /HEYI
+	robocopy "%Backup_location%\%appname%" "%CATALINA_HOME%\webapps\%appname%"  /s /e
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] Restore failed!"
 		echo "Proceed for manual restore from location %Backup_location%"
@@ -200,7 +210,7 @@ exit /b
 		exit 1
 	)
 
-	xcopy "%Backup_location%\ESCM-DataFiles" %CATALINA_HOME%\ESCM-DataFiles /HEYI 
+	robocopy "%Backup_location%\ESCM-DataFiles" %CATALINA_HOME%\ESCM-DataFiles /s /e 
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] Restore failed!"
 		echo "Proceed for manual restore from location %Backup_location%"
@@ -364,7 +374,7 @@ exit /b
 	echo Destination Folder: %dest_dir%
 	
 	echo "Copy latest Branding folder to existing WAR before merging"
-	xcopy %dest_dir%\branding\* %source_dir%\branding\ /s /e
+	xcopy %dest_dir%\branding\* %source_dir%\branding\ /HEYI
 	
 	echo "Removing Branding folder from New War"
 	rd "%dest_dir%\branding" /s /q
