@@ -129,7 +129,7 @@ df_copy(){
 	fi
 	done
 	##cp "$CATALINA_HOME/ESCM-DataFiles/i18n/messages.properties" "$Compare_War_location/DF_WAR_Struct/WEB-INF/grails-app/i18n"
-	cp "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location"
+	cp "$CATALINA_HOME/ESCM-DataFiles/web.xml" "$Compare_War_location"
 }
 #*******************************************************************#
 
@@ -211,7 +211,7 @@ new_war_copy(){
 			echo "[Error] Copying failed!"
 			restore
 		fi
-	elif [ "$word" == "lib" ]; then
+	elif [ "$word" == "i18n" ]; then
 		echo "Copying $word"
 		cp -r "$SYNERGY_HOME/WEB-INF/grails-app/$word" "$Compare_War_location/new_war/WEB-INF/grails-app/"
 		if [ "$?" != "0" ]; then
