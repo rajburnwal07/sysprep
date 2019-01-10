@@ -248,8 +248,8 @@ compare_folder(){
 	rm -rf "$dest_dir/branding"
   
 	echo Comparing for extracting the Delta-WAR
-	cd "$Compare_War_location"
-	java CompareFile "$source_dir" "$dest_dir"
+	#cd "$Compare_War_location"
+	java $Compare_War_location/CompareFile "$source_dir" "$dest_dir"
 	if [ "$?" != "0" ]; then
 		echo "[Error] Comparing failed!"
 		restore
