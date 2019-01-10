@@ -15,7 +15,7 @@ CATALINA_HOME="/usr/share/tomcat"
 ##############################################################
 
 ################### Initializing variables ###################
-Compare_War_location="./Compare_War"
+Compare_War_location="$PWD/Compare_War"
 BACKUP_DIRECTORY_NAME=$(date "+%d.%m.%Y-%H.%M.%S")
 Backup_location=./BACKUP/$BACKUP_DIRECTORY_NAME
 compare_list="branding;css;images;plugins;resources;lib;i18n"
@@ -248,8 +248,8 @@ compare_folder(){
 	rm -rf "$dest_dir/branding"
   
 	echo Comparing for extracting the Delta-WAR
-	#cd "$Compare_War_location"
-	java $Compare_War_location/CompareFile "$source_dir" "$dest_dir"
+	cd "$Compare_War_location"
+	java CompareFile "$source_dir" "$dest_dir"
 	if [ "$?" != "0" ]; then
 		echo "[Error] Comparing failed!"
 		restore
