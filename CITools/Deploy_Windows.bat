@@ -1,18 +1,17 @@
-REM @ECHO OFF
+@ECHO OFF
 SETLOCAL ENABLEEXTENSIONS
 setlocal enabledelayedexpansion
 
 echo "***********************************************************************************************"
-
-REM SET /P order_location="Please provide ISO [war-file location (till webapps)]: "  
-
 if "%~1"=="" (
     echo No parameters have been provided.
 	echo Provide Order.zip Location. i.e: D:\CB_10.0\ISO\Portal\CB_10.0\webapps
+	pause
 	goto :EOF
 )
 
 set order_location=%1%
+
 echo order_location: %order_location%
 
 ::################### User variables ###################
@@ -92,12 +91,12 @@ cd %order_location%
 cd ..
 set "DataFiles_location=%cd%"
 echo DataFiles_location: %DataFiles_location%
-::############ Get ESCM-DataFiles location if UNC path provided ##########
-for /f "tokens=*" %%a in ("%order_location%") do (
-set DataFiles_location=%%a
-set DataFiles_location=!DataFiles_location:~0,-7!
-)
-echo DataFiles_location: %DataFiles_location%
+REM ::############ Get ESCM-DataFiles location if UNC path provided ##########
+REM for /f "tokens=*" %%a in ("%order_location%") do (
+REM set DataFiles_location=%%a
+REM set DataFiles_location=!DataFiles_location:~0,-7!
+REM )
+REM echo DataFiles_location: %DataFiles_location%
 ::############ Get APP Name from SYNERGY_HOME ##########
 for %%f in (%SYNERGY_HOME%) do set appname=%%~nxf
 echo APP Name: %appname%
@@ -169,10 +168,7 @@ exit /b
 		exit 1
 	)
 	echo error: %ERRORLEVEL%
-	pause
 	robocopy %SYNERGY_HOME% "%Backup_location%\%appname%" /s /e
-	echo error: %ERRORLEVEL%
-	pause
 	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] Backup failed!"
 		pause
@@ -194,8 +190,11 @@ exit /b
 ::****************** Restore War/ESCM-DataFiles Function *********************#
 :restore
 	echo "Restoring to previous state"
+	rd %SYNERGY_HOME% /s /q
+	del %SYNERGY_HOME%.war
+	echo "New files deleted"
 	robocopy "%Backup_location%\%appname%" "%CATALINA_HOME%\webapps\%appname%"  /s /e
-	if NOT %ERRORLEVEL% == 0 (
+	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] Restore failed!"
 		echo "Proceed for manual restore from location %Backup_location%"
 		pause
@@ -211,7 +210,7 @@ exit /b
 	)
 
 	robocopy "%Backup_location%\ESCM-DataFiles" %CATALINA_HOME%\ESCM-DataFiles /s /e 
-	if NOT %ERRORLEVEL% == 0 (
+	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] Restore failed!"
 		echo "Proceed for manual restore from location %Backup_location%"
 		pause
@@ -254,7 +253,6 @@ exit /b
 		)
 	)
 	)
-	::copy "%CATALINA_HOME%\ESCM-DataFiles\i18n\messages.properties" "%Compare_War_location%\DF_WAR_Struct\WEB-INF\grails-app\i18n\"
 	copy "%SYNERGY_HOME%\WEB-INF\web.xml" "%Compare_War_location%"
 	
 exit /b
@@ -294,7 +292,6 @@ exit /b
 		)
 	)
 	)
-	::copy "%SYNERGY_HOME%\WEB-INF\grails-app\i18n\messages.properties" "%Compare_War_location%\old_war\WEB-INF\grails-app\i18n\"
 	copy "%SYNERGY_HOME%\WEB-INF\web.xml" "%Compare_War_location%"
 	
 exit /b
@@ -357,7 +354,6 @@ exit /b
 		)
 	)
 	)
-	::copy "%SYNERGY_HOME%\WEB-INF\grails-app\i18n\messages.properties" "%Compare_War_location%\new_war\WEB-INF\grails-app\i18n\"
 
 exit /b
 ::*******************************************************************#
@@ -365,8 +361,8 @@ exit /b
 ::****************** Merging ESCM-DataFiles/Old WAR & New War Function *********************#
 :compare_folder
 	echo Comparing Folders
-	echo "%current_dir%\lib\CompareFile.class"
-	copy "%current_dir%\lib\CompareFile.class" "%Compare_War_location%"
+	echo "%current_dir%\lib\CompareFile.jar"
+	copy "%current_dir%\lib\CompareFile.jar" "%Compare_War_location%"
 	
 	set "source_dir=%~1"
 	set "dest_dir=%~2"
@@ -381,7 +377,7 @@ exit /b
   
 	echo Comparing for extracting the Delta-WAR
 	cd "%Compare_War_location%"
-	"%JAVA_HOME%\bin\java" CompareFile "%source_dir%" "%dest_dir%"
+	"%JAVA_HOME%\bin\java" -jar CompareFile.jar "%source_dir%" "%dest_dir%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] Comparing failed!"
 		call :restore
@@ -398,11 +394,6 @@ exit /b
 			)
 		) else if %%i == i18n (
 			echo "Copying %%i"
-			if exist "%dest_dir%\WEB-INF\grails-app\%%i" xcopy "%dest_dir%\WEB-INF\grails-app\%%i" "%source_dir%\WEB-INF\grails-app\%%i" /HEYI 
-			if NOT %ERRORLEVEL% == 0 (
-				echo "[Error] Merging failed!"
-				call :restore
-			)
 		) else (
 			echo "Copying %%i"
 			if exist "%dest_dir%\%%i" xcopy "%dest_dir%\%%i" "%source_dir%\%%i" /HEYI
@@ -439,7 +430,6 @@ exit /b
 		)
 	)
 	
-	::copy "%source_dir%/WEB-INF/grails-app/i18n/messages.properties" "%SYNERGY_HOME%/WEB-INF/grails-app/i18n/" 
 	copy "%Compare_War_location%/web.xml" "%SYNERGY_HOME%/WEB-INF/"
 	echo Successfully Upgraded
 
@@ -453,7 +443,6 @@ exit /b
 		echo "Removing %%i"
 		if exist %CATALINA_HOME%\ESCM-DataFiles\%%i rd %CATALINA_HOME%\ESCM-DataFiles\%%i /s /q
 	)
-	::if exist %CATALINA_HOME%\ESCM-DataFiles\i18n rd %CATALINA_HOME%\ESCM-DataFiles\i18n /s /q
 	if exist %CATALINA_HOME%\ESCM-DataFiles\unused_files rd %CATALINA_HOME%\ESCM-DataFiles\unused_files /s /q
 exit /b
 ::*******************************************************************#
