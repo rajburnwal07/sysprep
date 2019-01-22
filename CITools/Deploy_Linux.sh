@@ -92,7 +92,7 @@ restore(){
 		exit 1
 	fi
 
-	cp -r "$Backup_location/ESCM-DataFiles/." "$CATALINA_HOME/ESCM-DataFiles/"
+	echo yes | cp -fru "$Backup_location/ESCM-DataFiles/." "$CATALINA_HOME/ESCM-DataFiles/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] ESCM-DataFiles Restore failed!"
 		echo "Proceed for manual restore from location $Backup_location"
@@ -134,7 +134,7 @@ df_copy(){
 		fi
 	fi
 	done
-	cp "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location"
+	echo yes | cp -fru "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from DataFiles"
 		exit 1
@@ -174,7 +174,7 @@ old_war_copy(){
 		fi
 	fi
 	done
-	cp "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location"
+	echo yes | cp -fru "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from Old WAR"
 		exit 1
@@ -245,7 +245,7 @@ new_war_copy(){
 #****************** Merging ESCM-DataFiles/Old WAR & New War Function *********************#
 compare_folder(){
 	echo Comparing Folders
-	cp "$citools_location/lib/CompareFile.jar" "$Compare_War_location"
+	echo yes | cp -fru "$citools_location/lib/CompareFile.jar" "$Compare_War_location"
 	if [ "$?" != "0" ]; then
 		echo "[Error] Comparing failed! Couldn't copy jar file"
 		restore
@@ -334,7 +334,7 @@ compare_folder(){
 		fi
 	fi
 	done
-	cp "$Compare_War_location/web.xml" "$SYNERGY_HOME/WEB-INF/"
+	echo yes | cp -fru "$Compare_War_location/web.xml" "$SYNERGY_HOME/WEB-INF/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] Merging failed! to SYNERGY_HOME location"
 		restore
