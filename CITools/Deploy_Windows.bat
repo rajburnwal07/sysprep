@@ -258,7 +258,7 @@ exit /b
 		)
 	)
 	)
-	copy /Y "%SYNERGY_HOME%\WEB-INF\web.xml" "%Compare_War_location%"
+	copy /Y "%CATALINA_HOME%\ESCM-DataFiles\web.xml" "%Compare_War_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] web.xml Copy failed! from DataFiles"
 		pause
@@ -457,7 +457,7 @@ exit /b
 		)
 	)
 	
-	copy /Y "%Compare_War_location%/web.xml" "%SYNERGY_HOME%/WEB-INF/"
+	xcopy "%Compare_War_location%/web.xml" "%SYNERGY_HOME%/WEB-INF/" /s/h/e/k/f/c/y
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] web.xml Merging failed! to SYNERGY HOME location"
 		call :restore
