@@ -457,7 +457,7 @@ exit /b
 		)
 	)
 	
-	xcopy "%Compare_War_location%/web.xml" "%SYNERGY_HOME%/WEB-INF/" /s/h/e/k/f/c/y
+	copy /Y "%Compare_War_location%\web.xml" "%SYNERGY_HOME%\WEB-INF\"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] web.xml Merging failed! to SYNERGY HOME location"
 		call :restore
