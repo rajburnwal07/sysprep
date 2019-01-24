@@ -134,7 +134,7 @@ df_copy(){
 		fi
 	fi
 	done
-	echo yes | cp -fru "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location"
+	echo yes | cp -fru "$CATALINA_HOME/ESCM-DataFiles/web.xml" "$Compare_War_location"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from DataFiles"
 		exit 1
@@ -352,7 +352,7 @@ rm_df(){
 		fi
 	done
 	if [ -d "$CATALINA_HOME/ESCM-DataFiles/unused_files" ]; then
-		rm -rf "$CATALINA_HOME/ESCM-DataFilesunused_files"
+		rm -rf "$CATALINA_HOME/ESCM-DataFiles/unused_files"
 	fi
 }
 #*******************************************************************#
