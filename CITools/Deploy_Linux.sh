@@ -106,8 +106,8 @@ restore(){
 df_copy(){
 	echo "Copying ESCM-DataFiles For Merging"
 	rm -rf "$Compare_War_location/DF_WAR_Struct"
-	mkdir -p $Compare_War_location/DF_WAR_Struct
-	mkdir -p $Compare_War_location/DF_WAR_Struct/WEB-INF/grails-app/i18n
+	mkdir -p "$Compare_War_location/DF_WAR_Struct"
+	mkdir -p "$Compare_War_location/DF_WAR_Struct/WEB-INF/grails-app/i18n"
 	echo "Copying $compare_list from ESCM-DataFiles"
 	export IFS=";"
 	for word in $compare_list; do
@@ -146,8 +146,8 @@ df_copy(){
 old_war_copy(){
 	echo "Copying Old WAR For Merging"
 	rm -rf "$Compare_War_location/old_war"
-	mkdir -p $Compare_War_location/old_war
-	mkdir -p $Compare_War_location/old_war/WEB-INF/grails-app/i18n
+	mkdir -p "$Compare_War_location/old_war"
+	mkdir -p "$Compare_War_location/old_war/WEB-INF/grails-app/i18n"
 	echo "Copying old $compare_list from SYNERGY_HOME"
 	export IFS=";"
 	for word in $compare_list; do
@@ -197,8 +197,8 @@ new_war_copy(){
 		restore
 	fi
 	rm -rf "$Compare_War_location/new_war"
-	mkdir -p $Compare_War_location/new_war
-	mkdir -p $Compare_War_location/new_war/WEB-INF/grails-app/i18n
+	mkdir -p "$Compare_War_location/new_war"
+	mkdir -p "$Compare_War_location/new_war/WEB-INF/grails-app/i18n"
 	echo $PWD
 	cp "$citools_location/order.war" "$SYNERGY_HOME.war"
 	if [ "$?" != "0" ]; then
@@ -445,6 +445,7 @@ case "$flag" in                 ## case responds to flag
                 ;;
 esac
 echo "Deployment Completed, proceed for next steps."
+sh "$citools_location/CleanupScript/LinuxCleanupScript.sh" "$SYNERGY_HOME"
 exit 0
 ##############################################################
 

@@ -6,7 +6,7 @@ echo "**************************************************************************
 if "%~1"=="" (
     echo No parameters have been provided.
 	echo Provide Order.zip Location. i.e: D:\CB_10.0\ISO\Portal\CB_10.0\webapps
-	pause
+	
 	goto :EOF
 )
 
@@ -142,7 +142,7 @@ echo APP Name: %appname%
 	move "%current_dir%\order.war" "%SYNERGY_HOME%.war"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] WAR Deployment failed!"
-		pause
+		
 		exit 1
 	)
 	
@@ -150,7 +150,7 @@ echo APP Name: %appname%
 	xcopy "%DataFiles_location%\ESCM-DataFiles" "%CATALINA_HOME%\ESCM-DataFiles" /HEYI
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] ESCM-DataFiles Deployment failed!"
-		pause
+		
 		exit 1
 	)
 exit /b
@@ -163,27 +163,27 @@ exit /b
 	mkdir "%Backup_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] %Backup_location% directory creation failed!"
-		pause
+		
 		exit 1
 	)
-	robocopy %SYNERGY_HOME% "%Backup_location%\%appname%" /s /e
+	robocopy "%SYNERGY_HOME%" "%Backup_location%\%appname%" /s /e
 	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] WAR Backup failed!"
-		pause
+		
 		exit 1
 	)
 
 	copy "%SYNERGY_HOME%.war" "%Backup_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] WAR Backup failed!"
-		pause
+		
 		exit 1
 	)
 
 	robocopy "%CATALINA_HOME%\ESCM-DataFiles" "%Backup_location%\ESCM-DataFiles" /s /e 
 	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] ESCM-DataFiles Backup failed!"
-		pause
+		
 		exit 1
 	)
 exit /b
@@ -193,14 +193,14 @@ exit /b
 ::****************** Restore War/ESCM-DataFiles Function *********************#
 :restore
 	echo "Restoring to previous state"
-	rd %SYNERGY_HOME% /s /q
-	del %SYNERGY_HOME%.war
+	rd "%SYNERGY_HOME%" /s /q
+	del "%SYNERGY_HOME%.war"
 	echo "New files deleted"
 	robocopy "%Backup_location%\%appname%" "%CATALINA_HOME%\webapps\%appname%"  /s /e
 	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] %appname% Restore failed!"
 		echo "Proceed for manual restore from location %Backup_location%"
-		pause
+		
 		exit 1
 	)
 
@@ -208,7 +208,7 @@ exit /b
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] %appname%.war Restore failed!"
 		echo "Proceed for manual restore from location %Backup_location%"
-		pause
+		
 		exit 1
 	)
 
@@ -216,7 +216,7 @@ exit /b
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] ESCM-DataFiles Restore failed!"
 		echo "Proceed for manual restore from location %Backup_location%"
-		pause
+		
 		exit 1
 	)
 	echo Restore Completed.
@@ -233,26 +233,26 @@ exit /b
 	For %%i in (%compare_list%) do (
 		if %%i == lib (
 			echo "Copying %%i"
-			xcopy %CATALINA_HOME%\ESCM-DataFiles\%%i "%Compare_War_location%\DF_WAR_Struct\WEB-INF\%%i" /HEYI 
+			xcopy "%CATALINA_HOME%\ESCM-DataFiles\%%i" "%Compare_War_location%\DF_WAR_Struct\WEB-INF\%%i" /HEYI 
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from DataFiles"
-				pause
+				
 				exit 1
 			)
 		) else if %%i == i18n (
 			echo "Copying %%i"
-			xcopy %CATALINA_HOME%\ESCM-DataFiles\%%i "%Compare_War_location%\DF_WAR_Struct\WEB-INF\grails-app\%%i" /HEYI 
+			xcopy "%CATALINA_HOME%\ESCM-DataFiles\%%i" "%Compare_War_location%\DF_WAR_Struct\WEB-INF\grails-app\%%i" /HEYI 
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from DataFiles"
-				pause
+				
 				exit 1
 			)
 		) else (
 			echo "Copying %%i"
-			xcopy %CATALINA_HOME%\ESCM-DataFiles\%%i "%Compare_War_location%\DF_WAR_Struct\%%i" /HEYI
+			xcopy "%CATALINA_HOME%\ESCM-DataFiles\%%i" "%Compare_War_location%\DF_WAR_Struct\%%i" /HEYI
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from DataFiles"
-				pause
+				
 				exit 1
 			)
 		)
@@ -261,7 +261,7 @@ exit /b
 	copy /Y "%CATALINA_HOME%\ESCM-DataFiles\web.xml" "%Compare_War_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] web.xml Copy failed! from DataFiles"
-		pause
+		
 		exit 1
 	)
 	
@@ -277,26 +277,26 @@ exit /b
 	For %%i in (%compare_list%) do (
 		if %%i == lib (
 			echo "Copying %%i"
-			xcopy %SYNERGY_HOME%\WEB-INF\%%i "%Compare_War_location%\old_war\WEB-INF\%%i" /HEYI 
+			xcopy "%SYNERGY_HOME%\WEB-INF\%%i" "%Compare_War_location%\old_war\WEB-INF\%%i" /HEYI 
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from Old WAR"
-				pause
+				
 				exit 1
 			)
 		) else if %%i == i18n (
 			echo "Copying %%i"
-			xcopy %SYNERGY_HOME%\WEB-INF\grails-app\%%i "%Compare_War_location%\old_war\WEB-INF\grails-app\%%i" /HEYI 
+			xcopy "%SYNERGY_HOME%\WEB-INF\grails-app\%%i" "%Compare_War_location%\old_war\WEB-INF\grails-app\%%i" /HEYI 
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from Old WAR"
-				pause
+				
 				exit 1
 			)
 		) else (
 			echo "Copying %%i"
-			xcopy %SYNERGY_HOME%\%%i "%Compare_War_location%\old_war\%%i" /HEYI
+			xcopy "%SYNERGY_HOME%\%%i" "%Compare_War_location%\old_war\%%i" /HEYI
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from Old WAR"
-				pause
+				
 				exit 1
 			)
 		)
@@ -305,7 +305,7 @@ exit /b
 	copy /Y "%SYNERGY_HOME%\WEB-INF\web.xml" "%Compare_War_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] web.xml Copy failed! from Old WAR"
-		pause
+		
 		exit 1
 	)
 	
@@ -316,13 +316,13 @@ exit /b
 :new_war_copy
 	echo "Copying New WAR For Merging"
 	echo Removing Exsisting WAR from SYNERGY HOME Location
-	rd %SYNERGY_HOME% /s /q
+	rd "%SYNERGY_HOME%" /s /q
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] Old WAR Delete failed!"
 		call :restore
 	)
 	
-	del %SYNERGY_HOME%.war
+	del "%SYNERGY_HOME%.war"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] Old WAR Delete failed!"
 		call :restore
@@ -347,21 +347,21 @@ exit /b
 	For %%i in (%compare_list%) do (
 		if %%i == lib (
 			echo "Copying %%i"
-			xcopy %SYNERGY_HOME%\WEB-INF\%%i "%Compare_War_location%\new_war\WEB-INF\%%i" /HEYI 
+			xcopy "%SYNERGY_HOME%\WEB-INF\%%i" "%Compare_War_location%\new_war\WEB-INF\%%i" /HEYI 
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from New WAR"
 				call :restore
 			)
 		) else if %%i == i18n (
 			echo "Copying %%i"
-			xcopy %SYNERGY_HOME%\WEB-INF\grails-app\%%i "%Compare_War_location%\new_war\WEB-INF\grails-app\%%i" /HEYI 
+			xcopy "%SYNERGY_HOME%\WEB-INF\grails-app\%%i" "%Compare_War_location%\new_war\WEB-INF\grails-app\%%i" /HEYI 
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from New WAR"
 				call :restore
 			)
 		) else (
 			echo "Copying %%i"
-			xcopy %SYNERGY_HOME%\%%i "%Compare_War_location%\new_war\%%i" /HEYI
+			xcopy "%SYNERGY_HOME%\%%i" "%Compare_War_location%\new_war\%%i" /HEYI
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from New WAR"
 				call :restore
@@ -389,7 +389,7 @@ exit /b
 	echo Destination Folder: %dest_dir%
 	
 	echo "Copy latest Branding folder to existing WAR before merging"
-	xcopy %dest_dir%\branding\* %source_dir%\branding\ /HEYI
+	xcopy "%dest_dir%\branding\*" "%source_dir%\branding\" /HEYI
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] Copy latest Branding folder failed!"
 		call :restore
@@ -472,17 +472,17 @@ exit /b
 	echo "Removing ESCM-DataFiles Content"
 	For %%i in (%compare_list%) do (
 		echo "Removing %%i"
-		if exist %CATALINA_HOME%\ESCM-DataFiles\%%i rd %CATALINA_HOME%\ESCM-DataFiles\%%i /s /q
+		if exist "%CATALINA_HOME%\ESCM-DataFiles\%%i" rd "%CATALINA_HOME%\ESCM-DataFiles\%%i" /s /q
 	)
-	if exist %CATALINA_HOME%\ESCM-DataFiles\unused_files rd %CATALINA_HOME%\ESCM-DataFiles\unused_files /s /q
+	if exist "%CATALINA_HOME%\ESCM-DataFiles\unused_files" rd "%CATALINA_HOME%\ESCM-DataFiles\unused_files" /s /q
 exit /b
 ::*******************************************************************#
 
 :END
 echo "Deployment Completed, proceed for next steps."
-pause
+call "%current_dir%\CleanupScript\WindowsCleanupScript.bat"
 goto :EOF
 
 :error
 echo "Inconsistent ESCM-DataFiles"
-pause
+
