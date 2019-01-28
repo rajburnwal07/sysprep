@@ -1,5 +1,5 @@
 #!/bin/bash
-begin=$(date +"%s")
+
 echo "***********************************************************************************************"
 if [ "$1" == "" ]; then
 	echo No parameters have been provided.
@@ -11,7 +11,7 @@ order_location=$1
 echo order_location: $order_location
 
 ################### User variables ###################
-SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
+SYNERGY_HOME="/usr/share/tomcat/webapps/cloudblue"
 CATALINA_HOME="/usr/share/tomcat"
 
 ##############################################################
@@ -21,7 +21,7 @@ citools_location="$PWD"
 Compare_War_location="$PWD/Compare_War"
 BACKUP_DIRECTORY_NAME=$(date "+%d.%m.%Y-%H.%M.%S")
 Backup_location="$PWD/BACKUP/$BACKUP_DIRECTORY_NAME"
-compare_list="plugins;resources;lib;i18n"
+compare_list="branding;css;images;plugins;resources;lib;i18n"
 ##############################################################
 
 #****************** Fresh Deploy War/ESCM-DataFiles Function *********************#
@@ -78,9 +78,6 @@ restore(){
     echo "Restoring to previous state"
 	rm -rf "$SYNERGY_HOME"
 	rm -rf "$SYNERGY_HOME.war"
-	rm -rf "$SYNERGY_HOME""_old"
-	rm -rf "$SYNERGY_HOME""_old.war"
-	echo "New files deleted"
 	cp -r "$Backup_location/$appname" "$CATALINA_HOME/webapps/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] $appname Restore failed!"
@@ -101,7 +98,6 @@ restore(){
 		echo "Proceed for manual restore from location $Backup_location"
 		exit 1
 	fi
-	echo Restore Completed.
 	exit 0
 }
 #*******************************************************************#
@@ -112,57 +108,6 @@ df_copy(){
 	rm -rf "$Compare_War_location/DF_WAR_Struct"
 	mkdir -p "$Compare_War_location/DF_WAR_Struct"
 	mkdir -p "$Compare_War_location/DF_WAR_Struct/WEB-INF/grails-app/i18n"
-
-	echo "Moving OLD CSS from ESCM-DataFiles to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/css"
-	if [ -d "$CATALINA_HOME/ESCM-DataFiles/css" ]; then 
-		mv -f "$CATALINA_HOME/ESCM-DataFiles/css" "$SYNERGY_HOME/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Moving OLD CSS from ESCM-DataFiles to SYNERGY HOME failed!"
-		restore
-	fi
-	
-	echo "Moving OLD Images from ESCM-DataFiles to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/images"
-	if [ -d "$CATALINA_HOME/ESCM-DataFiles/images" ]; then 
-		mv -f "$CATALINA_HOME/ESCM-DataFiles/images" "$SYNERGY_HOME/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Moving OLD Images from ESCM-DataFiles to SYNERGY HOME failed!"
-		restore
-	fi
-	
-	echo "Removing Old Branding from ESCM-DataFiles"
-	if [ -d  "$CATALINA_HOME/ESCM-DataFiles/branding/DeltaBranding" ]; then 
-		rm -rf "$CATALINA_HOME/ESCM-DataFiles/branding/DeltaBranding"
-		rm -rf "$CATALINA_HOME/ESCM-DataFiles/branding/BrandingCSSandLESSfile.zip"
-		rm -rf "$CATALINA_HOME/ESCM-DataFiles/branding/defaultTheme.zip"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Removing Old Branding from ESCM-DataFiles failed!"
-		restore
-	fi
- 
-	echo "Copying New Branding from SYNERGY HOME to ESCM-DataFiles"
-	if [ -d  "$SYNERGY_HOME/branding" ]; then 
-		echo yes | cp -fru "$SYNERGY_HOME/branding/." "$CATALINA_HOME/ESCM-DataFiles/branding/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Copying New Branding from SYNERGY HOME to ESCM-DataFiles failed!"
-		restore
-	fi
-	
-	echo "Moving Reseller Branding from ESCM-DataFiles to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/branding"
-	if [ -d  "$CATALINA_HOME/ESCM-DataFiles/branding" ]; then
-		mv -f "$CATALINA_HOME/ESCM-DataFiles/branding" "$SYNERGY_HOME/"   
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Moving Reseller Branding from ESCM-DataFiles to SYNERGY HOME failed!"
-		restore
-	fi
-	
 	echo "Copying $compare_list from ESCM-DataFiles"
 	export IFS=";"
 	for word in $compare_list; do
@@ -171,28 +116,28 @@ df_copy(){
 		cp -r "$CATALINA_HOME/ESCM-DataFiles/$word" "$Compare_War_location/DF_WAR_Struct/WEB-INF/"
 		if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from DataFiles"
-			restore
+			exit 1
 		fi
 	elif [ "$word" == "i18n" ]; then
 		echo "Copying $word"
 		cp -r "$CATALINA_HOME/ESCM-DataFiles/$word" "$Compare_War_location/DF_WAR_Struct/WEB-INF/grails-app/"
 		if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from DataFiles"
-			restore
+			exit 1
 		fi
 	else
 		echo "Copying $word"
 		cp -r "$CATALINA_HOME/ESCM-DataFiles/$word" "$Compare_War_location/DF_WAR_Struct/"
 		if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from DataFiles"
-			restore
+			exit 1
 		fi
 	fi
 	done
-	echo yes | cp -fru "$CATALINA_HOME/ESCM-DataFiles/web.xml" "$SYNERGY_HOME/WEB-INF/"
+	echo yes | cp -fru "$CATALINA_HOME/ESCM-DataFiles/web.xml" "$Compare_War_location"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from DataFiles"
-		restore
+		exit 1
 	fi
 }
 #*******************************************************************#
@@ -203,87 +148,36 @@ old_war_copy(){
 	rm -rf "$Compare_War_location/old_war"
 	mkdir -p "$Compare_War_location/old_war"
 	mkdir -p "$Compare_War_location/old_war/WEB-INF/grails-app/i18n"
-	
-	echo "Moving OLD CSS from OLD SYNERGY_HOME to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/css"
-	if [ -d "$SYNERGY_HOME""_old/css" ]; then 
-		mv -f "$SYNERGY_HOME""_old/css" "$SYNERGY_HOME/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Moving OLD CSS from OLD SYNERGY_HOME to SYNERGY HOME failed!"
-		restore
-	fi
-	
-	echo "Moving OLD Images from OLD SYNERGY_HOME to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/images"
-	if [ -d "$SYNERGY_HOME""_old/images" ]; then 
-		mv -f "$SYNERGY_HOME""_old/images" "$SYNERGY_HOME/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Moving OLD Images from OLD SYNERGY_HOME to SYNERGY HOME failed!"
-		restore
-	fi
-	
-	echo "Removing Old Branding from OLD SYNERGY_HOME"
-	if [ -d  "$SYNERGY_HOME""_old/branding/DeltaBranding" ]; then 
-		rm -rf "$SYNERGY_HOME""_old/branding/DeltaBranding"
-		rm -rf "$SYNERGY_HOME""_old/branding/BrandingCSSandLESSfile.zip"
-		rm -rf "$SYNERGY_HOME""_old/branding/defaultTheme.zip"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Removing Old Branding from OLD SYNERGY_HOME failed!"
-		restore
-	fi
-	
-	echo "Copying New Branding from SYNERGY HOME to OLD SYNERGY_HOME"
-	if [ -d  "$SYNERGY_HOME/branding" ]; then 
-		echo yes | cp -fru "$SYNERGY_HOME/branding/." "$SYNERGY_HOME""_old/branding/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Copying New Branding from SYNERGY HOME to OLD SYNERGY_HOME failed!"
-		restore
-	fi
-	
-	echo "Moving Reseller Branding from OLD SYNERGY_HOME to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/branding"
-	if [ -d  "$SYNERGY_HOME""_old/branding" ]; then
-		mv -f "$SYNERGY_HOME""_old/branding" "$SYNERGY_HOME/"   
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Moving Reseller Branding from OLD SYNERGY_HOME to SYNERGY HOME failed!"
-		restore
-	fi
-	
 	echo "Copying old $compare_list from SYNERGY_HOME"
 	export IFS=";"
 	for word in $compare_list; do
 	if [ "$word" == "lib" ]; then
 		echo "Copying $word"
-		cp -r "$SYNERGY_HOME""_old/WEB-INF/$word" "$Compare_War_location/old_war/WEB-INF/"
+		cp -r "$SYNERGY_HOME/WEB-INF/$word" "$Compare_War_location/old_war/WEB-INF/"
 		if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from Old WAR"
-			restore
+			exit 1
 		fi
 	elif [ "$word" == "i18n" ]; then
 		echo "Copying $word"
-		cp -r "$SYNERGY_HOME""_old/WEB-INF/grails-app/$word" "$Compare_War_location/old_war/WEB-INF/grails-app/"
+		cp -r "$SYNERGY_HOME/WEB-INF/grails-app/$word" "$Compare_War_location/old_war/WEB-INF/grails-app/"
 		if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from Old WAR"
-			restore
+			exit 1
 		fi
 	else
 	   echo "Copying $word"
-	   cp -r "$SYNERGY_HOME""_old/$word" "$Compare_War_location/old_war/"
+	   cp -r "$SYNERGY_HOME/$word" "$Compare_War_location/old_war/"
 	   if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from Old WAR"
-			restore
+			exit 1
 		fi
 	fi
 	done
-	echo yes | cp -fru "$SYNERGY_HOME""_old/WEB-INF/web.xml" "$SYNERGY_HOME/WEB-INF/"
+	echo yes | cp -fru "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from Old WAR"
-		restore
+		exit 1
 	fi
 }
 #*******************************************************************#
@@ -291,28 +185,21 @@ old_war_copy(){
 #****************** Copying New WAR For Merging Function *********************#
 new_war_copy(){
 	echo "Copying New WAR For Merging"
+	echo Removing Exsisting WAR
+	rm -rf "$SYNERGY_HOME"
+	if [ "$?" != "0" ]; then
+		echo "[Error] Old WAR remove failed!"
+		restore
+	fi
+	rm -rf "$SYNERGY_HOME.war"
+	if [ "$?" != "0" ]; then
+		echo "[Error] Old WAR remove failed!"
+		restore
+	fi
 	rm -rf "$Compare_War_location/new_war"
 	mkdir -p "$Compare_War_location/new_war"
 	mkdir -p "$Compare_War_location/new_war/WEB-INF/grails-app/i18n"
-	
-	echo Renaming Exsisting WAR to OLD from SYNERGY HOME Location
-	if [ -d  "$SYNERGY_HOME" ]; then 
-		mv "$SYNERGY_HOME" "$SYNERGY_HOME""_old"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Renaming Exsisting Old WAR failed!"
-		restore
-	fi
-	
-	if [ -f  "$SYNERGY_HOME.war" ]; then 
-		mv "$SYNERGY_HOME.war" "$SYNERGY_HOME""_old.war"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Renaming Exsisting Old WAR failed!"
-		restore
-	fi
-
-	echo Copying New WAR to SYNERGY HOME Location
+	echo $PWD
 	cp "$citools_location/order.war" "$SYNERGY_HOME.war"
 	if [ "$?" != "0" ]; then
 		echo "[Error] New WAR Copy failed!  to SYNERGY HOME Location"
@@ -358,14 +245,33 @@ new_war_copy(){
 #****************** Merging ESCM-DataFiles/Old WAR & New War Function *********************#
 compare_folder(){
 	echo Comparing Folders
-
+	echo yes | cp -fru "$citools_location/lib/CompareFile.jar" "$Compare_War_location"
+	if [ "$?" != "0" ]; then
+		echo "[Error] Comparing failed! Couldn't copy jar file"
+		restore
+	fi
+	
 	local source_dir=$1
 	local dest_dir=$2
 	echo Source Folder: $source_dir
 	echo Destination Folder: $dest_dir
-	 
+	
+	echo "Copy latest Branding folder to existing WAR before merging"
+	echo yes | cp -fru "$dest_dir/branding/." "$source_dir/branding/"
+	if [ "$?" != "0" ]; then
+		echo "[Error] Copy latest Branding folder failed"
+		restore
+	fi
+	
+	echo "Removing Branding folder from New War"
+	rm -rf "$dest_dir/branding"
+	if [ "$?" != "0" ]; then
+		echo "[Error] removing Branding folder failed!"
+		restore
+	fi
+  
 	echo Comparing for extracting the Delta-WAR
-	cd "$citools_location/lib"
+	cd "$Compare_War_location"
 	java -jar CompareFile.jar "$source_dir" "$dest_dir"
 	if [ "$?" != "0" ]; then
 		echo "[Error] Comparing failed!"
@@ -428,25 +334,11 @@ compare_folder(){
 		fi
 	fi
 	done
-	
-	echo Removing Exsisting WAR from SYNERGY HOME Location
-	if [ -d "$SYNERGY_HOME""_old" ]; then
-		rm -rf "$SYNERGY_HOME""_old"
-	fi
+	echo yes | cp -fru "$Compare_War_location/web.xml" "$SYNERGY_HOME/WEB-INF/"
 	if [ "$?" != "0" ]; then
-		echo "[Error] Old WAR Delete failed!"
+		echo "[Error] Merging failed! to SYNERGY_HOME location"
 		restore
 	fi
-	
-	if [ -f "$SYNERGY_HOME""_old.war" ]; then
-		rm -rf "$SYNERGY_HOME""_old.war"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Old WAR Delete failed!"
-		restore
-	fi
-	
-	echo Successfully Upgraded
 }
 #*******************************************************************#
 
@@ -502,10 +394,6 @@ else
 fi
 echo "Flag Value: $flag"
 
-if [ -d "$Compare_War_location" ]; then
-	rm -rf "$Compare_War_location"
-fi
-
 ##############################################################
 
 ########################## Extract zip #######################
@@ -516,12 +404,9 @@ if [ "$?" != "0" ]; then
     echo "[Error] order.zip unzip failed!"
     exit 1
 fi
-# cd "$order_location"
-# cd ..
-# DataFiles_location=$PWD
-# echo DataFiles_location: $DataFiles_location
-
-DataFiles_location=${order_location%w*}
+cd "$order_location"
+cd ..
+DataFiles_location=$PWD
 echo DataFiles_location: $DataFiles_location
 ############ Get APP Name from SYNERGY_HOME ##########
 appname=${SYNERGY_HOME##*/}
@@ -542,8 +427,8 @@ case "$flag" in                 ## case responds to flag
 				echo =    ESCM-DataFiles to WAR Upgrade    =	 
 				echo =======================================
 				backup
-				new_war_copy
 				df_copy
+				new_war_copy
 				compare_folder "$Compare_War_location/DF_WAR_Struct" "$Compare_War_location/new_war"
 				rm_df
                 break
@@ -553,18 +438,14 @@ case "$flag" in                 ## case responds to flag
 				echo =    WAR to WAR Upgrade    =	 
 				echo ============================
 				backup
-				new_war_copy
 				old_war_copy
+				new_war_copy
 				compare_folder "$Compare_War_location/old_war" "$Compare_War_location/new_war"
                 break
                 ;;
 esac
 echo "Deployment Completed, proceed for next steps."
 sh "$citools_location/CleanupScript/LinuxCleanupScript.sh" "$SYNERGY_HOME"
-termin=$(date +"%s")
-difftimelps=$(($termin-$begin))
-echo -----------------------------------------------
-echo Total Time Duration: "$(($difftimelps / 60)) minutes and $(($difftimelps % 60)) seconds"
 exit 0
 ##############################################################
 
