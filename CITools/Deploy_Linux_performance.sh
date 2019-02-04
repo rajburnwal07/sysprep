@@ -1,17 +1,5 @@
 #!/bin/bash
 begin=$(date +"%s")
-################### User variables ###################
-SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
-CATALINA_HOME="/usr/share/tomcat"
-##############################################################
-
-################### Initializing variables ###################
-citools_location="$PWD"
-Compare_War_location="$PWD/Compare_War"
-BACKUP_DIRECTORY_NAME=$(date "+%d.%m.%Y-%H.%M.%S")
-Backup_location="$PWD/BACKUP/current_backup"
-compare_list="plugins;resources;lib;i18n"
-##############################################################
 echo "***********************************************************************************************"
 if [ "$1" == "" ]; then
 	echo No parameters have been provided.
@@ -22,21 +10,19 @@ fi
 order_location=$1
 echo order_location: $order_location
 
-#****************** Removing ESCM-DataFiles Content Function *********************#
-extractorder(){
-	echo "Extracting Order.zip"
-	echo "war location: $citools_location"
-	unzip -o "$order_location/order.zip" -d "$citools_location"
-	if [ "$?" != "0" ]; then
-		echo "[Error] order.zip unzip failed!"
-		exit 1
-	fi
+################### User variables ###################
+SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
+CATALINA_HOME="/usr/share/tomcat"
 
-	DataFiles_location=${order_location%w*}
-	echo DataFiles_location: $DataFiles_location
+##############################################################
 
-}
-#*******************************************************************#
+################### Initializing variables ###################
+citools_location="$PWD"
+Compare_War_location="$PWD/Compare_War"
+BACKUP_DIRECTORY_NAME=$(date "+%d.%m.%Y-%H.%M.%S")
+Backup_location="$PWD/BACKUP/$BACKUP_DIRECTORY_NAME"
+compare_list="plugins;resources;lib;i18n"
+##############################################################
 
 #****************** Fresh Deploy War/ESCM-DataFiles Function *********************#
 fresh(){
@@ -57,13 +43,10 @@ fresh(){
 }
 #*******************************************************************#
 
+
 #****************** Taking Backup War/ESCM-DataFiles Function *********************#
 backup(){
     echo "Taking Backup War/ESCM-DataFiles"
-	echo Creating Final Deployment Backup Location
-	if [ -d "$Backup_location" ]; then
-		mv "$Backup_location" "$PWD/BACKUP/$BACKUP_DIRECTORY_NAME"
-	fi
 	mkdir -p "$Backup_location"
 	if [ "$?" != "0" ]; then
 		echo "[Error] $Backup_location directory creation failed!"
@@ -120,40 +103,6 @@ restore(){
 	fi
 	echo Restore Completed.
 	exit 0
-}
-#*******************************************************************#
-
-#****************** Restore War/ESCM-DataFiles Function *********************#
-error_restore(){
-	echo "Error in previous deployment"
-    echo "Restoring to previous state"
-	rm -rf "$SYNERGY_HOME"
-	rm -rf "$SYNERGY_HOME.war"
-	rm -rf "$SYNERGY_HOME""_old"
-	rm -rf "$SYNERGY_HOME""_old.war"
-	echo "New files deleted"
-	cp -r "$Backup_location/$appname" "$CATALINA_HOME/webapps/"
-	if [ "$?" != "0" ]; then
-		echo "[Error] $appname Restore failed!"
-		echo "Proceed for manual restore from location $Backup_location"
-		exit 1
-	fi
-
-	cp "$Backup_location/$appname.war" "$CATALINA_HOME/webapps/"
-	if [ "$?" != "0" ]; then
-		echo "[Error] $appname.war Restore failed!"
-		echo "Proceed for manual restore from location $Backup_location"
-		exit 1
-	fi
-
-	echo yes | cp -fru "$Backup_location/ESCM-DataFiles/." "$CATALINA_HOME/ESCM-DataFiles/"
-	if [ "$?" != "0" ]; then
-		echo "[Error] ESCM-DataFiles Restore failed!"
-		echo "Proceed for manual restore from location $Backup_location"
-		exit 1
-	fi
-	echo Restore Completed.
-	echo 0 > "$CATALINA_HOME/deployment_status.txt"
 }
 #*******************************************************************#
 
@@ -516,43 +465,6 @@ rm_df(){
 }
 #*******************************************************************#
 
-#### Values Used for Measuring the state of deployment #######
-## * = File Not Exist, not upgraded
-## 0 = Initial Stage, not upgraded
-## 1 = Backup Completed, but deployment failed need to restore first
-## 2 = Deployment Completed, upgraded successfully
-################################################################
-
-######### Measuring the state of deployment ############
-if [ -f "$CATALINA_HOME/deployment_status.txt" ]; then
-	while read LINE; do ds_value="$LINE"; done < "$CATALINA_HOME/deployment_status.txt"
-else 
-	echo 0 > "$CATALINA_HOME/deployment_status.txt"
-	while read LINE; do ds_value="$LINE"; done < "$CATALINA_HOME/deployment_status.txt"
-fi
-###### Deployment state #######
-case "$ds_value" in                 ## case tells the deployment status
-            "0" )
-                echo =================================================
-				echo Deployment Status: "$ds_value", Initial Stage, not upgraded	 
-				echo =================================================
-                break                    
-                ;;
-            "1" )         
-                echo ============================================================================================
-				echo Deployment Status: "$ds_value", Backup Completed, but previous deployment failed need to restore first	 
-				echo ============================================================================================
-                break
-                ;;
-            "2" )
-                echo ===========================================================================
-				echo Deployment Status: "$ds_value", Previous Deployment Completed, upgraded successfully	 
-				echo ===========================================================================
-                break
-                ;;
-esac
-##############################################################
-
 ###### Taking Decision {Fresh, Upgrade:DF2War, War2War} #######
 export IFS=";"
 if [ -d "$CATALINA_HOME/ESCM-DataFiles" ]; then     ##Checking ESCM-DataFiles exist
@@ -588,13 +500,29 @@ else
 	##=============Fresh installation=============
 	flag=1
 fi
-##############################################################
 echo "Flag Value: $flag"
+
 if [ -d "$Compare_War_location" ]; then
 	rm -rf "$Compare_War_location"
 fi
+
 ##############################################################
 
+########################## Extract zip #######################
+echo "Extracting Order.zip"
+echo "war location: $citools_location"
+unzip -o "$order_location/order.zip" -d "$citools_location"
+if [ "$?" != "0" ]; then
+    echo "[Error] order.zip unzip failed!"
+    exit 1
+fi
+# cd "$order_location"
+# cd ..
+# DataFiles_location=$PWD
+# echo DataFiles_location: $DataFiles_location
+
+DataFiles_location=${order_location%w*}
+echo DataFiles_location: $DataFiles_location
 ############ Get APP Name from SYNERGY_HOME ##########
 appname=${SYNERGY_HOME##*/}
 echo App Name: $appname
@@ -606,7 +534,6 @@ case "$flag" in                 ## case responds to flag
                 echo ============================ 
 				echo =    Fresh Installation    =	 
 				echo ============================
-				extractorder
 				fresh
                 break                    
                 ;;
@@ -614,38 +541,26 @@ case "$flag" in                 ## case responds to flag
                 echo ======================================= 
 				echo =    ESCM-DataFiles to WAR Upgrade    =	 
 				echo =======================================
-				if [ "$ds_value" == "1" ]; then
-					error_restore
-				fi
 				backup
-				echo 1 > "$CATALINA_HOME/deployment_status.txt"
-				extractorder
 				new_war_copy
 				df_copy
 				compare_folder "$Compare_War_location/DF_WAR_Struct" "$Compare_War_location/new_war"
 				rm_df
-				echo 2 > "$CATALINA_HOME/deployment_status.txt"
                 break
                 ;;
             "3" )
                 echo ============================
 				echo =    WAR to WAR Upgrade    =	 
 				echo ============================
-				if [ "$ds_value" == "1" ]; then
-					error_restore
-				fi
 				backup
-				echo 1 > "$CATALINA_HOME/deployment_status.txt"
-				extractorder
 				new_war_copy
 				old_war_copy
 				compare_folder "$Compare_War_location/old_war" "$Compare_War_location/new_war"
-				echo 2 > "$CATALINA_HOME/deployment_status.txt"
                 break
                 ;;
 esac
-sh "$citools_location/CleanupScript/LinuxCleanupScript.sh" "$SYNERGY_HOME"
 echo "Deployment Completed, proceed for next steps."
+sh "$citools_location/CleanupScript/LinuxCleanupScript.sh" "$SYNERGY_HOME"
 termin=$(date +"%s")
 difftimelps=$(($termin-$begin))
 echo -----------------------------------------------

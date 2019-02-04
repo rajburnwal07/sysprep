@@ -2,17 +2,6 @@
 SETLOCAL ENABLEEXTENSIONS
 setlocal enabledelayedexpansion
 set STARTTIME=%TIME%
-::################### User variables ###################
-REM ::set SYNERGY_HOME="C:\apache-tomcat-8.0.46\webapps\cloudblue"
-REM ::set CATALINA_HOME="C:\apache-tomcat-8.0.46"
-::##############################################################
-::################### Initializing variables ###################
-set current_dir=%cd%
-set Compare_War_location=%CATALINA_HOME%\Compare_War
-set BACKUP_DIRECTORY_NAME=%date:~10,4%_%date:~4,2%_%date:~7,2%_%time:~0,2%_%time:~3,2%_%time:~6,2%_%time:~9,2%
-set Backup_location=%current_dir%\BACKUP\current_backup
-set compare_list=plugins,resources,lib,i18n
-::##############################################################
 echo "***********************************************************************************************"
 if "%~1"=="" (
     echo No parameters have been provided.
@@ -24,48 +13,23 @@ if "%~1"=="" (
 set order_location=%1%
 echo order_location: %order_location%
 
-::#### Values Used for Measuring the state of deployment #######
-:: * = File Not Exist, not upgraded
-:: 0 = Initial Stage, not upgraded
-:: 1 = Backup Completed, but deployment failed need to restore first
-:: 2 = Deployment Completed, upgraded successfully
+::################### User variables ###################
+REM ::set SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
+REM ::set CATALINA_HOME="/usr/share/tomcat"
+
 ::##############################################################
 
-::######### Measuring the state of deployment ############
-if exist "%CATALINA_HOME%\deployment_status.txt" (
-	for /f "tokens=1 delims= " %%a in (%CATALINA_HOME%\deployment_status.txt) do (
-		set ds_value=%%a
-	)
-)else (
-	echo 0 > "%CATALINA_HOME%\deployment_status.txt"
-	for /f "tokens=1 delims= " %%a in (%CATALINA_HOME%\deployment_status.txt) do (
-		set ds_value=%%a
-	)
-)
-::###### Deployment state #######
-	2>NUL CALL :STATE_%ds_value% # jump to :STATE_0, :STATE_1, etc.
-	EXIT /B
-	:STATE_0
-		echo =================================================
-		echo Deployment Status: %ds_value%, Initial Stage, not upgraded	 
-		echo =================================================
-		GOTO :StartDeployment
-	  
-	:STATE_1 
-		echo ============================================================================================
-		echo Deployment Status: %ds_value%, Backup Completed, but previous deployment failed need to restore first	 
-		echo ============================================================================================
-		GOTO :StartDeployment
-		
-	:STATE_2 
-		echo ===========================================================================
-		echo Deployment Status: %ds_value%, Previous Deployment Completed, upgraded successfully	 
-		echo ===========================================================================
-		GOTO :StartDeployment
+::################### Initializing variables ###################
+set current_dir=%cd%
+set Compare_War_location=%CATALINA_HOME%\Compare_War
+set BACKUP_DIRECTORY_NAME=%date:~10,4%_%date:~4,2%_%date:~7,2%_%time:~0,2%_%time:~3,2%_%time:~6,2%_%time:~9,2%
+set Backup_location=%current_dir%\BACKUP\%BACKUP_DIRECTORY_NAME%
+set compare_list=plugins,resources,lib,i18n
 ::##############################################################
 
-:StartDeployment
+
 ::###### Taking Decision {Fresh, Upgrade:DF2War, War2War} #######
+
 IF DEFINED SYNERGY_HOME (
 	IF DEFINED CATALINA_HOME (		 
 		if exist %CATALINA_HOME%\ESCM-DataFiles (
@@ -114,78 +78,66 @@ IF DEFINED SYNERGY_HOME (
 ::##############################################################
 echo Flag Value: %flag%
 if exist "%Compare_War_location%" rd "%Compare_War_location%" /s /q
-::##############################################################
+::########################## Extract zip #######################
+echo "Extracting Order.zip"
+echo WAR Location: %current_dir%
+unzip -o %order_location%/order.zip -d "%current_dir%"
+if NOT %ERRORLEVEL% == 0 (
+	echo "[Error] WAR Unzip failed!"
+	GOTO :EOF
+)
 
+set "DataFiles_location1=%order_location%"
+set "DataFiles_location=%DataFiles_location1:~0,-9%"
+
+set "DataFiles_location1=%DataFiles_location%"
+set "DataFiles_location=%DataFiles_location1:~1%"
+echo DataFiles_location: %DataFiles_location%
+REM ::############ Get ESCM-DataFiles location if UNC path provided ##########
+REM for /f "tokens=*" %%a in ("%order_location%") do (
+REM set DataFiles_location=%%a
+REM set DataFiles_location=!DataFiles_location:~0,-7!
+REM )
+REM echo DataFiles_location: %DataFiles_location%
 ::############ Get APP Name from SYNERGY_HOME ##########
 for %%f in (%SYNERGY_HOME%) do set appname=%%~nxf
 echo APP Name: %appname%
 ::##############################################################
 
 ::###### Deploying according to flag value #######
-
+	:Start	
 	2>NUL CALL :CASE_%flag% # jump to :CASE_1, :CASE_2, etc.
 	EXIT /B
 
 	:CASE_1
-		echo ============================ 
-		echo =    Fresh Installation    =	 
-		echo ============================
-		call :extractorder
+		Echo ============================ 
+		Echo =    Fresh Installation    =	 
+		Echo ============================
 		call :fresh
 		GOTO :END
 	  
 	:CASE_2 
-		echo ======================================= 
-		echo =    ESCM-DataFiles to WAR Upgrade    =	 
-		echo =======================================
-		if "%ds_value%" == "1" (
-			call :error_restore
-		)
+		Echo ======================================= 
+		Echo =    ESCM-DataFiles to WAR Upgrade    =	 
+		Echo =======================================
 		call :backup
-		echo 1 > "%CATALINA_HOME%\deployment_status.txt"
-		call :extractorder
 		call :new_war_copy
 		call :df_copy
 		call :compare_folder "%Compare_War_location%\DF_WAR_Struct", "%Compare_War_location%\new_war"
 		call :rm_df
-		echo 2 > "%CATALINA_HOME%\deployment_status.txt"
 		GOTO :END
 		
 	:CASE_3 
-		echo ============================
-		echo =    WAR to WAR Upgrade    =	 
-		echo ============================
-		if "%ds_value%" == "1" (
-			call :error_restore
-		)
+		Echo ============================
+		Echo =    WAR to WAR Upgrade    =	 
+		Echo ============================
 		call :backup
-		echo 1 > "%CATALINA_HOME%\deployment_status.txt"
-		call :extractorder
 		call :new_war_copy
 		call :old_war_copy
 		call :compare_folder "%Compare_War_location%\old_war", "%Compare_War_location%\new_war"
-		echo 2 > "%CATALINA_HOME%\deployment_status.txt"
 		GOTO :END
 
 ::##############################################################
-
-::****************** Extracting WAR Function *********************#
-:extractorder
-	echo "Extracting Order.zip"
-	echo WAR Location: %current_dir%
-	unzip -o %order_location%/order.zip -d "%current_dir%"
-	if NOT %ERRORLEVEL% == 0 (
-		echo "[Error] WAR Unzip failed!"
-		GOTO :EOF
-	)
-	set "DataFiles_location1=%order_location%"
-	set "DataFiles_location=%DataFiles_location1:~0,-9%"
-	set "DataFiles_location1=%DataFiles_location%"
-	set "DataFiles_location=%DataFiles_location1:~1%"
-	echo DataFiles_location: %DataFiles_location%
-exit /b
-
-::*******************************************************************#
 
 ::****************** Fresh Deploy War/ESCM-DataFiles Function *********************#
 :fresh
@@ -209,15 +161,11 @@ exit /b
 ::****************** Taking Backup War/ESCM-DataFiles Function *********************#
 :backup
 	echo "Taking Backup War/ESCM-DataFiles"
-	echo Creating Final Deployment Backup Location
-	if exist "%Backup_location%" move "%Backup_location%" "%current_dir%\BACKUP\FD_%BACKUP_DIRECTORY_NAME%"
 	mkdir "%Backup_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] %Backup_location% directory creation failed!"
 		exit 1
 	)
-
-
 	robocopy "%SYNERGY_HOME%" "%Backup_location%\%appname%" /s /e
 	if NOT %ERRORLEVEL% == 1 (
 		echo "[Error] WAR Backup failed!"
@@ -235,7 +183,6 @@ exit /b
 		echo "[Error] ESCM-DataFiles Backup failed!"
 		exit 1
 	)
-
 exit /b
 
 ::*******************************************************************#
@@ -243,10 +190,10 @@ exit /b
 ::****************** Restore War/ESCM-DataFiles Function *********************#
 :restore
 	echo "Restoring to previous state"
-	if exist "%SYNERGY_HOME%" rd "%SYNERGY_HOME%" /s /q
-	if exist "%SYNERGY_HOME%.war" del "%SYNERGY_HOME%.war"
-	if exist "%SYNERGY_HOME%_old" rd "%SYNERGY_HOME%_old" /s /q
-	if exist "%SYNERGY_HOME%_old.war" del "%SYNERGY_HOME%_old.war"
+	rd "%SYNERGY_HOME%" /s /q
+	del "%SYNERGY_HOME%.war"
+	rd "%SYNERGY_HOME%_old" /s /q
+	del "%SYNERGY_HOME%_old.war"
 	echo "New files deleted"
 	robocopy "%Backup_location%\%appname%" "%CATALINA_HOME%\webapps\%appname%"  /s /e
 	if NOT %ERRORLEVEL% == 1 (
@@ -270,40 +217,6 @@ exit /b
 	)
 	echo Restore Completed.
 	exit 0
-exit /b
-::*******************************************************************#
-
-::****************** Restore War/ESCM-DataFiles Function in case of failed deployment *********************#
-:error_restore
-	echo "Error in previous deployment"
-	echo "Restoring to previous state"
-	if exist "%SYNERGY_HOME%" rd "%SYNERGY_HOME%" /s /q
-	if exist "%SYNERGY_HOME%.war" del "%SYNERGY_HOME%.war"
-	if exist "%SYNERGY_HOME%_old" rd "%SYNERGY_HOME%_old" /s /q
-	if exist "%SYNERGY_HOME%_old.war" del "%SYNERGY_HOME%_old.war"
-	echo "New files deleted"
-	robocopy "%Backup_location%\%appname%" "%CATALINA_HOME%\webapps\%appname%"  /s /e
-	if NOT %ERRORLEVEL% == 1 (
-		echo "[Error] %appname% Restore failed!"
-		echo "Proceed for manual restore from location %Backup_location%"
-		exit 1
-	)
-
-	copy "%Backup_location%\%appname%.war" "%CATALINA_HOME%\webapps\"
-	if NOT %ERRORLEVEL% == 0 (
-		echo "[Error] %appname%.war Restore failed!"
-		echo "Proceed for manual restore from location %Backup_location%"
-		exit 1
-	)
-
-	robocopy "%Backup_location%\ESCM-DataFiles" "%CATALINA_HOME%\ESCM-DataFiles" /s /e 
-	if NOT %ERRORLEVEL% == 0 (
-		echo "[Error] ESCM-DataFiles Restore failed!"
-		echo "Proceed for manual restore from location %Backup_location%"
-		exit 1
-	)
-	echo Restore Completed.
-	echo 0 > "%CATALINA_HOME%\deployment_status.txt"
 exit /b
 ::*******************************************************************#
 
@@ -623,8 +536,8 @@ exit /b
 ::*******************************************************************#
 
 :END
-call "%current_dir%\CleanupScript\WindowsCleanupScript.bat"
 echo "Deployment Completed, proceed for next steps."
+call "%current_dir%\CleanupScript\WindowsCleanupScript.bat"
 
 set ENDTIME=%TIME%
     for /F "tokens=1-4 delims=:.," %%a in ("%STARTTIME%") do (
