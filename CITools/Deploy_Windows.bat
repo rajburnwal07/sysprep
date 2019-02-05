@@ -71,32 +71,10 @@ IF DEFINED SYNERGY_HOME (
 		if exist %CATALINA_HOME%\ESCM-DataFiles (
 			if exist %CATALINA_HOME%\ESCM-DataFiles\branding (
 			::::=============ESCM-DataFiles to WAR Upgrade::=============
-				For %%i in (%compare_list%) do (
-					if exist %CATALINA_HOME%\ESCM-DataFiles\%%i (
-						ECHO "%%i found"
-						set flag=2
-
-					)Else (
-						ECHO "%%i not found in ESCM-DataFiles"
-						set flag=0
-						Goto :error	
-
-					)
-				)
+					set flag=2
 			)Else (
 			::::=============WAR to WAR Upgrade::=============
-				For %%i in (%compare_list%) do (
-					if not exist %CATALINA_HOME%\ESCM-DataFiles\%%i (
-						ECHO "%%i not found"
-						set flag=3
-
-					)Else (
-						ECHO "%%i found in ESCM-DataFiles"
-						set flag=0
-						Goto :error	
-
-					)
-				)
+					set flag=3
 			)			
 		)Else (
 			::=============Fresh installation=============
@@ -263,11 +241,7 @@ exit /b
 	)
 
 	robocopy "%Backup_location%\ESCM-DataFiles" "%CATALINA_HOME%\ESCM-DataFiles" /s /e 
-	if NOT %ERRORLEVEL% == 1 (
-		echo "[Error] ESCM-DataFiles Restore failed!"
-		echo "Proceed for manual restore from location %Backup_location%"
-		exit 1
-	)
+
 	echo Restore Completed.
 	exit 0
 exit /b
@@ -297,13 +271,10 @@ exit /b
 	)
 
 	robocopy "%Backup_location%\ESCM-DataFiles" "%CATALINA_HOME%\ESCM-DataFiles" /s /e 
-	if NOT %ERRORLEVEL% == 0 (
-		echo "[Error] ESCM-DataFiles Restore failed!"
-		echo "Proceed for manual restore from location %Backup_location%"
-		exit 1
-	)
+
 	echo Restore Completed.
 	echo 0 > "%CATALINA_HOME%\deployment_status.txt"
+
 exit /b
 ::*******************************************************************#
 
@@ -362,7 +333,7 @@ exit /b
 			)
 		) else if %%i == i18n (
 			echo "Copying %%i"
-			xcopy "%CATALINA_HOME%\ESCM-DataFiles\%%i" "%Compare_War_location%\DF_WAR_Struct\WEB-INF\grails-app\%%i" /HEYI 
+			copy /Y "%CATALINA_HOME%\ESCM-DataFiles\%%i\messages.properties" "%Compare_War_location%\DF_WAR_Struct\WEB-INF\grails-app\%%i\messages.properties"
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from DataFiles"
 				call :restore
@@ -375,6 +346,14 @@ exit /b
 				call :restore
 			)
 		)
+	)
+	
+	echo "Moving Connector Message file from ESCM-DataFiles to SYNERGY HOME"
+	if exist "%SYNERGY_HOME%\WEB-INF\grails-app\i18n" rd "%SYNERGY_HOME%\WEB-INF\grails-app\i18n" /s /q
+	if exist "%CATALINA_HOME%\ESCM-DataFiles\i18n" move /Y "%CATALINA_HOME%\ESCM-DataFiles\i18n" "%SYNERGY_HOME%\WEB-INF\grails-app\i18n"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Moving Connector Message file from ESCM-DataFiles to SYNERGY HOME failed!"
+		call :restore
 	)
 	
 	copy /Y "%CATALINA_HOME%\ESCM-DataFiles\web.xml" "%SYNERGY_HOME%\WEB-INF\"
@@ -441,7 +420,7 @@ exit /b
 			)
 		) else if %%i == i18n (
 			echo "Copying %%i"
-			xcopy "%SYNERGY_HOME%_old\WEB-INF\grails-app\%%i" "%Compare_War_location%\old_war\WEB-INF\grails-app\%%i" /HEYI 
+			copy /Y "%SYNERGY_HOME%_old\WEB-INF\grails-app\%%i\messages.properties" "%Compare_War_location%\old_war\WEB-INF\grails-app\%%i\messages.properties"
 			if NOT %ERRORLEVEL% == 0 (
 				echo "[Error] %%i Copy failed! from Old WAR"
 				call :restore
@@ -456,6 +435,14 @@ exit /b
 		)
 	)
 
+	echo "Moving Connector Message file from SYNERGY HOME old to SYNERGY HOME"
+	if exist "%SYNERGY_HOME%\WEB-INF\grails-app\i18n" rd "%SYNERGY_HOME%\WEB-INF\grails-app\i18n" /s /q
+	if exist "%SYNERGY_HOME%_old\WEB-INF\grails-app\i18n" move /Y "%SYNERGY_HOME%_old\WEB-INF\grails-app\i18n" "%SYNERGY_HOME%\WEB-INF\grails-app\i18n"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Moving Connector Message file from SYNERGY HOME old to SYNERGY HOME failed!"
+		call :restore
+	)
+	
 	copy /Y "%SYNERGY_HOME%_old\WEB-INF\web.xml" "%SYNERGY_HOME%\WEB-INF\"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] web.xml Copy failed! from Old WAR"

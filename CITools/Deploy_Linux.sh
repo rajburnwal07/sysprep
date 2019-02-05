@@ -226,7 +226,7 @@ df_copy(){
 		fi
 	elif [ "$word" == "i18n" ]; then
 		echo "Copying $word"
-		cp -r "$CATALINA_HOME/ESCM-DataFiles/$word" "$Compare_War_location/DF_WAR_Struct/WEB-INF/grails-app/"
+		cp -r "$CATALINA_HOME/ESCM-DataFiles/$word/messages.properties" "$Compare_War_location/DF_WAR_Struct/WEB-INF/grails-app/$word/messages.properties"
 		if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from DataFiles"
 			restore
@@ -240,6 +240,17 @@ df_copy(){
 		fi
 	fi
 	done
+ 
+ echo "Moving Connector Message file from SYNERGY HOME old to SYNERGY HOME"
+	rm -rf "$SYNERGY_HOME/WEB-INF/grails-app/i18n"
+	if [ -d  "$CATALINA_HOME/ESCM-DataFiles/i18n" ]; then
+		mv -f "$CATALINA_HOME/ESCM-DataFiles/i18n" "$SYNERGY_HOME/WEB-INF/grails-app/"   
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Moving Connector Message file from SYNERGY HOME old to SYNERGY HOME failed!"
+		restore
+	fi
+ 
 	echo yes | cp -fru "$CATALINA_HOME/ESCM-DataFiles/web.xml" "$SYNERGY_HOME/WEB-INF/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from DataFiles"
@@ -317,7 +328,7 @@ old_war_copy(){
 		fi
 	elif [ "$word" == "i18n" ]; then
 		echo "Copying $word"
-		cp -r "$SYNERGY_HOME""_old/WEB-INF/grails-app/$word" "$Compare_War_location/old_war/WEB-INF/grails-app/"
+		cp -r "$SYNERGY_HOME""_old/WEB-INF/grails-app/$word/messages.properties" "$Compare_War_location/old_war/WEB-INF/grails-app/$word/messages.properties"
 		if [ "$?" != "0" ]; then
 			echo "[Error] $word Copy failed! from Old WAR"
 			restore
@@ -331,7 +342,18 @@ old_war_copy(){
 		fi
 	fi
 	done
-	echo yes | cp -fru "$SYNERGY_HOME""_old/WEB-INF/web.xml" "$SYNERGY_HOME/WEB-INF/"
+ 
+ 	echo "Moving Connector Message file from SYNERGY HOME old to SYNERGY HOME"
+	rm -rf "$SYNERGY_HOME/WEB-INF/grails-app/i18n"
+	if [ -d  "$SYNERGY_HOME""_old/WEB-INF/grails-app/i18n" ]; then
+		mv -f "$SYNERGY_HOME""_old/WEB-INF/grails-app/i18n" "$SYNERGY_HOME/WEB-INF/grails-app/"   
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Moving Connector Message file from SYNERGY HOME old to SYNERGY HOME failed!"
+		restore
+	fi
+	
+ 	echo yes | cp -fru "$SYNERGY_HOME""_old/WEB-INF/web.xml" "$SYNERGY_HOME/WEB-INF/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from Old WAR"
 		restore
@@ -554,36 +576,14 @@ esac
 ##############################################################
 
 ###### Taking Decision {Fresh, Upgrade:DF2War, War2War} #######
-export IFS=";"
 if [ -d "$CATALINA_HOME/ESCM-DataFiles" ]; then     ##Checking ESCM-DataFiles exist
     if [ -d "$CATALINA_HOME/ESCM-DataFiles/branding" ]; then      ##Checking images,lib,css inside ESCM-DataFiles exist
 	##=============ESCM-DataFiles to WAR Upgrade::=============
-		for word in $compare_list; do
-			if [ -d "$CATALINA_HOME/ESCM-DataFiles/$word" ]; then
-				echo "$word Found"
-				flag=2
-			else
-				echo "$word Not Found in ESCM-DataFiles"
-				flag=0
-				echo "Inconsistent ESCM-DataFiles"
-				exit 1
-			fi
-		done
-		
+		flag=2
     else
 	##=============WAR to WAR Upgrade::=============
-		for word in $compare_list; do
-			if [ ! -d "$CATALINA_HOME/ESCM-DataFiles/$word" ]; then
-				echo "$word Not Found"
-				flag=3
-			else
-				echo "$word Found in ESCM-DataFiles"
-				flag=0
-				echo "Inconsistent ESCM-DataFiles"
-				exit 1
-			fi
-		done
-    fi
+		flag=3
+	fi
 else
 	##=============Fresh installation=============
 	flag=1
