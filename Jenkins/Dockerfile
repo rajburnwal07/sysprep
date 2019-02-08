@@ -17,6 +17,14 @@ ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
 # add the admin user  
 COPY /configs/users "$JENKINS_HOME"/users/
 
+RUN ip4=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+RUN echo Localhost IP: $ip4
+
+# add the master node  
+COPY /configs/nodes "$JENKINS_HOME"/nodes/
+
+RUN sed -i 's/hostnameip/$ip4/g'  "$JENKINS_HOME"/nodes/MasterNode/config.xml
+
 # Add the main config file to the jenkins path  
 COPY /configs/jenkins_home_config.xml "$JENKINS_HOME"/config.xml
 
@@ -24,5 +32,5 @@ COPY /configs/plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
 
 # Add the custom configs to the container  
-COPY /configs/Jobs/. "$JENKINS_HOME"/jobs/
-COPY /configs/Jobs/. "$JENKINS_HOME"/workspace/
+COPY /configs/jobs/. "$JENKINS_HOME"/jobs/
+COPY /configs/jobs/. "$JENKINS_HOME"/workspace/

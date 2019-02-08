@@ -1,0 +1,185 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@1.5.11">
+      <gitLabConnection></gitLabConnection>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+    <jenkins.plugins.office365connector.WebhookJobProperty plugin="Office-365-Connector@4.5">
+      <webhooks>
+        <jenkins.plugins.office365connector.Webhook>
+          <name>OGRP-DevOps (India - Information Technology)</name>
+          <url>https://outlook.office.com/webhook/2e23f319-d20f-4930-a467-9ab3aafe2bc2@d78aee32-8f91-4f9e-90ea-fb72965d9d7c/JenkinsCI/071197e8e3484f3c8c381a65259ea72d/23ae21bc-3491-4fb5-914c-baf3a63169a0</url>
+          <startNotification>true</startNotification>
+          <notifySuccess>true</notifySuccess>
+          <notifyAborted>true</notifyAborted>
+          <notifyNotBuilt>false</notifyNotBuilt>
+          <notifyUnstable>true</notifyUnstable>
+          <notifyFailure>true</notifyFailure>
+          <notifyBackToNormal>true</notifyBackToNormal>
+          <notifyRepeatedFailure>false</notifyRepeatedFailure>
+          <timeout>30000</timeout>
+          <macros class="empty-list"/>
+        </jenkins.plugins.office365connector.Webhook>
+      </webhooks>
+    </jenkins.plugins.office365connector.WebhookJobProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>BuildChoice</name>
+          <description>Select that you want
+Note: Build will only take build
+Build&amp;Deploy: will take build and deploy in 10.10.1.40 App Server</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>Build</string>
+              <string>Build&amp;Deploy</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.1">
+          <name>BranchName</name>
+          <description></description>
+          <randomName>choice-parameter-3801810171982900</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.49">
+              <script>if (BuildChoice.equals(&quot;Build&quot;)) {
+  return [&quot;master&quot;, &quot;EASPortal_RestAPI_19112018&quot;, &quot;CB10&quot;]
+} else if (BuildChoice.equals(&quot;Build&amp;Deploy&quot;)) {
+  return [&quot;master&quot;]
+} else {
+  return [&quot;Unknown BranchName&quot;]
+}</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.49">
+              <script>return [&quot;Script Error&quot;]</script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>Build_CB10_Portal</projectName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>BuildChoice</referencedParameters>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+        <org.biouno.unochoice.CascadeChoiceParameter plugin="uno-choice@2.1">
+          <name>SCPDKBranchName</name>
+          <description>Auto select SCPDK BranchName</description>
+          <randomName>choice-parameter-3301122034530800</randomName>
+          <visibleItemCount>1</visibleItemCount>
+          <script class="org.biouno.unochoice.model.GroovyScript">
+            <secureScript plugin="script-security@1.49">
+              <script>if (BranchName.equals(&quot;master&quot;)) {
+  return [&quot;master&quot;]
+} else if (BranchName.equals(&quot;EASPortal_RestAPI_19112018&quot;)) {
+  return [&quot;ServiceConnectorPDK_RestAPI_19112018&quot;]
+} else if (BranchName.equals(&quot;CB10&quot;)) {
+  return [&quot;CB10&quot;]
+} else {
+  return [&quot;Unknown BranchName&quot;]
+}</script>
+              <sandbox>false</sandbox>
+            </secureScript>
+            <secureFallbackScript plugin="script-security@1.49">
+              <script>return [&quot;Script Error&quot;]</script>
+              <sandbox>false</sandbox>
+            </secureFallbackScript>
+          </script>
+          <projectName>Build_CB10_Portal</projectName>
+          <parameters class="linked-hash-map"/>
+          <referencedParameters>BranchName</referencedParameters>
+          <choiceType>PT_SINGLE_SELECT</choiceType>
+          <filterable>false</filterable>
+          <filterLength>1</filterLength>
+        </org.biouno.unochoice.CascadeChoiceParameter>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@3.9.1">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>git@gitlab.ms.ensim.com:EAS/EASPortal.git</url>
+        <credentialsId>platformbuildteam</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>${BranchName}</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions>
+      <hudson.plugins.git.extensions.impl.CloneOption>
+        <shallow>true</shallow>
+        <noTags>false</noTags>
+        <reference></reference>
+        <timeout>60</timeout>
+        <depth>0</depth>
+        <honorRefspec>false</honorRefspec>
+      </hudson.plugins.git.extensions.impl.CloneOption>
+    </extensions>
+  </scm>
+  <assignedNode>BuildServer53</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.29.3">
+      <spec></spec>
+    </com.cloudbees.jenkins.GitHubPushTrigger>
+    <hudson.triggers.SCMTrigger>
+      <spec>H */4 * * *</spec>
+      <ignorePostCommitHooks>true</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <customWorkspace>E:\GIT_EAS_CB_10.0\EAS\Updated_ESCM_Codebase\EASPortal</customWorkspace>
+  <builders>
+    <hudson.tasks.BatchFile>
+      <command>call &quot;E:\GIT_EAS_CB_10.0\EAS\BuildScript.bat&quot; CB_10.0_%BranchName%_B%BUILD_ID%_%BUILD_TIMESTAMP% %BranchName% %SCPDKBranchName% SCPDK_%SCPDKBranchName%_B%BUILD_ID%_%BUILD_TIMESTAMP%&#xd;
+</command>
+    </hudson.tasks.BatchFile>
+  </builders>
+  <publishers>
+    <org.jenkins__ci.plugins.flexible__publish.FlexiblePublisher plugin="flexible-publish@0.15.2">
+      <publishers>
+        <org.jenkins__ci.plugins.flexible__publish.ConditionalPublisher>
+          <condition class="org.jenkins_ci.plugins.run_condition.core.StringsMatchCondition" plugin="run-condition@1.2">
+            <arg1>${BuildChoice}</arg1>
+            <arg2>Build&amp;Deploy</arg2>
+            <ignoreCase>false</ignoreCase>
+          </condition>
+          <publisherList>
+            <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="parameterized-trigger@2.35.2">
+              <configs>
+                <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+                  <configs>
+                    <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                      <properties>order_zip_location=CB_10.0_${BranchName}_B${BUILD_ID}_${BUILD_TIMESTAMP}</properties>
+                      <textParamValueOnNewLine>false</textParamValueOnNewLine>
+                    </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                  </configs>
+                  <projects>DeployEAS_Linux/CloudBlue_App_Deploy_Linux_10.10.1.40</projects>
+                  <condition>SUCCESS</condition>
+                  <triggerWithNoParameters>false</triggerWithNoParameters>
+                  <triggerFromChildProjects>false</triggerFromChildProjects>
+                </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+              </configs>
+            </hudson.plugins.parameterizedtrigger.BuildTrigger>
+          </publisherList>
+          <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.2"/>
+          <executionStrategy class="org.jenkins_ci.plugins.flexible_publish.strategy.FailAtEndExecutionStrategy"/>
+        </org.jenkins__ci.plugins.flexible__publish.ConditionalPublisher>
+      </publishers>
+    </org.jenkins__ci.plugins.flexible__publish.FlexiblePublisher>
+  </publishers>
+  <buildWrappers/>
+</project>
