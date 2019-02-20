@@ -1,4 +1,5 @@
 #!/bin/bash
+####Version: CB_10.1
 begin=$(date +"%s")
 ################### User variables ###################
 SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
@@ -16,11 +17,26 @@ echo "**************************************************************************
 if [ "$1" == "" ]; then
 	echo No parameters have been provided.
 	echo Provide Order.zip Location. i.e: /home/CB_10.0/ISO/Portal/CB_10.0/webapps
+	echo "Command to execute: Deploy_Windows.bat "/home/CB_10.0/ISO/Portal/CB_10.0/webapps" >> LogCloudBlue.txt"
 	exit 1
 fi
 
 order_location=$1
 echo order_location: $order_location
+
+if [ -f "$order_location/order.zip" ]; then
+	echo Order.zip found.
+else 
+	echo Order.zip not found in location: %order_location%
+	exit 1
+fi
+
+###Checking Unzip is working or not
+unzip >/dev/null 2>&1
+if [ "$?" != "0" ]; then
+	echo "Unzip is not working, please install unzip first"
+	exit 1
+fi
 
 #****************** Removing ESCM-DataFiles Content Function *********************#
 extractorder(){

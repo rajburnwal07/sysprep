@@ -1,0 +1,100 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_URL</name>
+          <description>Provide git url</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_BRANCH</name>
+          <description>Provide git branch</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>SCPDKBranchName</name>
+          <description></description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>Project_Name</name>
+          <description>Provide Project_Name, you can use it for jars as well.
+Note: Please check the &quot;Execute Windows Batch Command &amp; custom workspace&quot; after creating the job.</description>
+          <defaultValue>EASPortal</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode>master</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <javaposse.jobdsl.plugin.ExecuteDslScripts plugin="job-dsl@1.71">
+      <scriptText>folder(&apos;CB10.1&apos;) {
+    description(&apos;Folder containing all jobs for CB10.1&apos;)
+}
+folder(&quot;/CB10.1/${Project_Name}&quot;) { description(&apos;Folder containing all jobs from Branchs&apos;) }
+folder(&quot;/CB10.1/${Project_Name}/${GIT_BRANCH}&quot;) { description(&quot;Project Name: ${Project_Name},  Branch Name: ${GIT_BRANCH}&quot;) }
+
+job(&quot;/CB10.1/${Project_Name}/${GIT_BRANCH}/${GIT_BRANCH}_build&quot;) {
+    description &quot;Build ${Project_Name} from ${GIT_BRANCH} branch.&quot;
+    disabled(false)
+    quietPeriod(0)
+    logRotator {
+        artifactNumToKeep(20)
+        numToKeep(20)
+    }
+    label(&apos;BuildServer53&apos;)
+    customWorkspace(&apos;E:\\GIT_EAS_CB_10.1\\EAS&apos;)
+    scm {
+    	git {
+          remote {
+              credentials(&apos;platformbuildteam&apos;)
+              url(GIT_URL)
+          }
+          extensions {
+              cloneOptions {
+				  timeout(60)
+			  }
+          }
+          branch(GIT_BRANCH)
+       }
+	}
+    triggers {
+        scm(&apos;H */4 * * *&apos;) {
+            ignorePostCommitHooks(true)
+        }
+    }
+    steps {
+      batchFile(&quot;echo &apos;E:\\GIT_EAS_CB_10.1\\EAS\\BuildScript.bat&apos; CB_10.0_${GIT_BRANCH}_B%BUILD_ID%_%BUILD_TIMESTAMP% ${GIT_BRANCH} ${SCPDKBranchName} SCPDK_${SCPDKBranchName}_B%BUILD_ID%_%BUILD_TIMESTAMP%&quot;)
+    }
+}</scriptText>
+      <usingScriptText>true</usingScriptText>
+      <sandbox>false</sandbox>
+      <ignoreExisting>false</ignoreExisting>
+      <ignoreMissingFiles>false</ignoreMissingFiles>
+      <failOnMissingPlugin>false</failOnMissingPlugin>
+      <unstableOnDeprecation>false</unstableOnDeprecation>
+      <removedJobAction>IGNORE</removedJobAction>
+      <removedViewAction>IGNORE</removedViewAction>
+      <removedConfigFilesAction>IGNORE</removedConfigFilesAction>
+      <lookupStrategy>JENKINS_ROOT</lookupStrategy>
+    </javaposse.jobdsl.plugin.ExecuteDslScripts>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

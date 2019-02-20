@@ -1,4 +1,5 @@
 @ECHO OFF
+::::Version: CB_10.1
 SETLOCAL ENABLEEXTENSIONS
 setlocal enabledelayedexpansion
 set STARTTIME=%TIME%
@@ -17,13 +18,26 @@ echo "**************************************************************************
 if "%~1"=="" (
     echo No parameters have been provided.
 	echo Provide Order.zip Location. i.e: D:\CB_10.0\ISO\Portal\CB_10.0\webapps
-	
+	echo "Command to execute: Deploy_Windows.bat "D:\CB_10.0\ISO\Portal\CB_10.0\webapps" >> LogCloudBlue.txt"
 	goto :EOF
 )
 
 set order_location=%1%
 echo order_location: %order_location%
+if exist %order_location%\order.zip (
+	echo Order.zip found.
+)else (
+	echo Order.zip not found in location: %order_location%
+	goto :EOF
+)
 
+::Checking Unzip is working or not
+unzip /? 2> nul
+if NOT %ERRORLEVEL% == 0 (
+	echo "Unzip is not working, please install unzip first"
+	goto :EOF
+)
+::##############################################################
 ::#### Values Used for Measuring the state of deployment #######
 :: * = File Not Exist, not upgraded
 :: 0 = Initial Stage, not upgraded
@@ -154,7 +168,7 @@ echo APP Name: %appname%
 	unzip -o %order_location%/order.zip -d "%current_dir%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] WAR Unzip failed!"
-		GOTO :EOF
+		exit 1
 	)
 	set "DataFiles_location1=%order_location%"
 	set "DataFiles_location=%DataFiles_location1:~0,-9%"
@@ -188,7 +202,7 @@ exit /b
 :backup
 	echo "Taking Backup War/ESCM-DataFiles"
 	echo Creating Final Deployment Backup Location
-	if exist "%Backup_location%" move "%Backup_location%" "%current_dir%\BACKUP\FD_%BACKUP_DIRECTORY_NAME%"
+	if exist "%Backup_location%" move "%Backup_location%" "%current_dir%\BACKUP\%BACKUP_DIRECTORY_NAME%"
 	mkdir "%Backup_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] %Backup_location% directory creation failed!"
@@ -312,7 +326,7 @@ exit /b
 	)
 	
 	echo "Moving Reseller Branding from ESCM-DataFiles to SYNERGY HOME"
-	if exist "%CATALINA_HOME%\ESCM-DataFiles\branding" move /Y "%CATALINA_HOME%\ESCM-DataFiles\branding\*" "%SYNERGY_HOME%\branding\"
+	::if exist "%CATALINA_HOME%\ESCM-DataFiles\branding" move /Y "%CATALINA_HOME%\ESCM-DataFiles\branding\*" "%SYNERGY_HOME%\branding\"
 	for /d %%d in (%CATALINA_HOME%\ESCM-DataFiles\branding\*) do (
 		echo Dir: "%%d"
 		move /Y %%d "%SYNERGY_HOME%\branding\"
@@ -399,7 +413,7 @@ exit /b
 	)
 	
 	echo "Moving Reseller Branding from SYNERGY HOME old to SYNERGY HOME"
-	if exist "%SYNERGY_HOME%_old\branding" move /Y "%SYNERGY_HOME%_old\branding\*" "%SYNERGY_HOME%\branding\"
+	::if exist "%SYNERGY_HOME%_old\branding" move /Y "%SYNERGY_HOME%_old\branding\*" "%SYNERGY_HOME%\branding\"
 	for /d %%d in (%SYNERGY_HOME%_old\branding\*) do (
 		echo Dir: "%%d"
 		move /Y %%d "%SYNERGY_HOME%\branding\"
