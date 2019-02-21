@@ -1,5 +1,5 @@
 #!/bin/bash
-####Version: CB_10.1
+####Version: CB_10.1.0
 begin=$(date +"%s")
 ################### User variables ###################
 SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
@@ -7,17 +7,21 @@ CATALINA_HOME="/usr/share/tomcat"
 ##############################################################
 
 ################### Initializing variables ###################
+Version="CB_10.1.0"
 citools_location="$PWD"
-Compare_War_location="$PWD/Compare_War"
+Compare_War_location="$CATALINA_HOME/Compare_War"
 BACKUP_DIRECTORY_NAME=$(date "+%d.%m.%Y-%H.%M.%S")
-Backup_location="$PWD/BACKUP/current_backup"
+Backup_location="$CATALINA_HOME/BACKUP/current_backup"
 compare_list="plugins;resources;lib;i18n"
 ##############################################################
 echo "***********************************************************************************************"
 if [ "$1" == "" ]; then
 	echo No parameters have been provided.
 	echo Provide Order.zip Location. i.e: /home/CB_10.0/ISO/Portal/CB_10.0/webapps
-	echo "Command to execute: Deploy_Windows.bat "/home/CB_10.0/ISO/Portal/CB_10.0/webapps" >> LogCloudBlue.txt"
+	echo "Command to execute:# sh Deploy_Linux.sh "/home/CB_10.0/ISO/Portal/CB_10.0/webapps" >> LogCloudBlue.txt"
+	exit 1
+elif [ "$1" == "-v" ]; then
+	echo Script Version: "$Version"
 	exit 1
 fi
 
@@ -27,7 +31,7 @@ echo order_location: $order_location
 if [ -f "$order_location/order.zip" ]; then
 	echo Order.zip found.
 else 
-	echo Order.zip not found in location: %order_location%
+	echo Order.zip not found in location: $order_location
 	exit 1
 fi
 
@@ -78,7 +82,7 @@ backup(){
     echo "Taking Backup War/ESCM-DataFiles"
 	echo Creating Final Deployment Backup Location
 	if [ -d "$Backup_location" ]; then
-		mv "$Backup_location" "$PWD/BACKUP/$BACKUP_DIRECTORY_NAME"
+		mv "$Backup_location" "$CATALINA_HOME/BACKUP/$BACKUP_DIRECTORY_NAME"
 	fi
 	mkdir -p "$Backup_location"
 	if [ "$?" != "0" ]; then
@@ -135,6 +139,7 @@ restore(){
 		exit 1
 	fi
 	echo Restore Completed.
+	rm -rf "$CATALINA_HOME/deployment_status.txt"
 	exit 0
 }
 #*******************************************************************#
@@ -143,6 +148,10 @@ restore(){
 error_restore(){
 	echo "Error in previous deployment"
     echo "Restoring to previous state"
+	if [ ! -d "$Backup_location" ]; then
+		echo "Previous backup location not found"
+		exit 1
+	fi
 	rm -rf "$SYNERGY_HOME"
 	rm -rf "$SYNERGY_HOME.war"
 	rm -rf "$SYNERGY_HOME""_old"

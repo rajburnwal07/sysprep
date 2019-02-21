@@ -1,5 +1,5 @@
 @ECHO OFF
-::::Version: CB_10.1
+::::Version: CB_10.1.0
 SETLOCAL ENABLEEXTENSIONS
 setlocal enabledelayedexpansion
 set STARTTIME=%TIME%
@@ -8,17 +8,21 @@ REM ::set SYNERGY_HOME="C:\apache-tomcat-8.0.46\webapps\cloudblue"
 REM ::set CATALINA_HOME="C:\apache-tomcat-8.0.46"
 ::##############################################################
 ::################### Initializing variables ###################
+set "Version=CB_10.1.0"
 set current_dir=%cd%
 set Compare_War_location=%CATALINA_HOME%\Compare_War
 set BACKUP_DIRECTORY_NAME=%date:~10,4%_%date:~4,2%_%date:~7,2%_%time:~0,2%_%time:~3,2%_%time:~6,2%_%time:~9,2%
-set Backup_location=%current_dir%\BACKUP\current_backup
+set Backup_location=%CATALINA_HOME%\BACKUP\current_backup
 set compare_list=plugins,resources,lib,i18n
 ::##############################################################
 echo "***********************************************************************************************"
 if "%~1"=="" (
     echo No parameters have been provided.
 	echo Provide Order.zip Location. i.e: D:\CB_10.0\ISO\Portal\CB_10.0\webapps
-	echo "Command to execute: Deploy_Windows.bat "D:\CB_10.0\ISO\Portal\CB_10.0\webapps" >> LogCloudBlue.txt"
+	echo "Command to execute:> Deploy_Windows.bat "D:\CB_10.0\ISO\Portal\CB_10.0\webapps" >> LogCloudBlue.txt"
+	goto :EOF
+) else if "%~1"=="-v" (
+	echo Script Version: %Version%
 	goto :EOF
 )
 
@@ -202,7 +206,7 @@ exit /b
 :backup
 	echo "Taking Backup War/ESCM-DataFiles"
 	echo Creating Final Deployment Backup Location
-	if exist "%Backup_location%" move "%Backup_location%" "%current_dir%\BACKUP\%BACKUP_DIRECTORY_NAME%"
+	if exist "%Backup_location%" move "%Backup_location%" "%CATALINA_HOME%\BACKUP\%BACKUP_DIRECTORY_NAME%"
 	mkdir "%Backup_location%"
 	if NOT %ERRORLEVEL% == 0 (
 		echo "[Error] %Backup_location% directory creation failed!"
@@ -257,6 +261,7 @@ exit /b
 	robocopy "%Backup_location%\ESCM-DataFiles" "%CATALINA_HOME%\ESCM-DataFiles" /s /e 
 
 	echo Restore Completed.
+	del "%CATALINA_HOME%\deployment_status.txt"
 	exit 0
 exit /b
 ::*******************************************************************#
@@ -265,6 +270,10 @@ exit /b
 :error_restore
 	echo "Error in previous deployment"
 	echo "Restoring to previous state"
+	if not exist "%Backup_location%" (
+		echo "Previous backup location not found"
+		exit 1
+	)
 	if exist "%SYNERGY_HOME%" rd "%SYNERGY_HOME%" /s /q
 	if exist "%SYNERGY_HOME%.war" del "%SYNERGY_HOME%.war"
 	if exist "%SYNERGY_HOME%_old" rd "%SYNERGY_HOME%_old" /s /q
