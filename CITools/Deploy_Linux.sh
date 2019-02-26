@@ -132,7 +132,7 @@ restore(){
 		exit 1
 	fi
 
-	echo yes | cp -fru "$Backup_location/ESCM-DataFiles/." "$CATALINA_HOME/ESCM-DataFiles/"
+	echo yes | cp -r "$Backup_location/ESCM-DataFiles/." "$CATALINA_HOME/ESCM-DataFiles/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] ESCM-DataFiles Restore failed!"
 		echo "Proceed for manual restore from location $Backup_location"
@@ -171,7 +171,7 @@ error_restore(){
 		exit 1
 	fi
 
-	echo yes | cp -fru "$Backup_location/ESCM-DataFiles/." "$CATALINA_HOME/ESCM-DataFiles/"
+	echo yes | cp -r "$Backup_location/ESCM-DataFiles/." "$CATALINA_HOME/ESCM-DataFiles/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] ESCM-DataFiles Restore failed!"
 		echo "Proceed for manual restore from location $Backup_location"
@@ -222,7 +222,7 @@ df_copy(){
  
 	echo "Copying New Branding from SYNERGY HOME to ESCM-DataFiles"
 	if [ -d  "$SYNERGY_HOME/branding" ]; then 
-		echo yes | cp -fru "$SYNERGY_HOME/branding/." "$CATALINA_HOME/ESCM-DataFiles/branding/"
+		echo yes | cp -r "$SYNERGY_HOME/branding/." "$CATALINA_HOME/ESCM-DataFiles/branding/"
 	fi
 	if [ "$?" != "0" ]; then
 		echo "[Error] Copying New Branding from SYNERGY HOME to ESCM-DataFiles failed!"
@@ -276,7 +276,7 @@ df_copy(){
 		restore
 	fi
  
-	echo yes | cp -fru "$CATALINA_HOME/ESCM-DataFiles/web.xml" "$SYNERGY_HOME/WEB-INF/"
+	echo yes | cp -r "$CATALINA_HOME/ESCM-DataFiles/web.xml" "$SYNERGY_HOME/WEB-INF/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from DataFiles"
 		restore
@@ -324,7 +324,7 @@ old_war_copy(){
 	
 	echo "Copying New Branding from SYNERGY HOME to OLD SYNERGY_HOME"
 	if [ -d  "$SYNERGY_HOME/branding" ]; then 
-		echo yes | cp -fru "$SYNERGY_HOME/branding/." "$SYNERGY_HOME""_old/branding/"
+		echo yes | cp -r "$SYNERGY_HOME/branding/." "$SYNERGY_HOME""_old/branding/"
 	fi
 	if [ "$?" != "0" ]; then
 		echo "[Error] Copying New Branding from SYNERGY HOME to OLD SYNERGY_HOME failed!"
@@ -378,7 +378,7 @@ old_war_copy(){
 		restore
 	fi
 	
- 	echo yes | cp -fru "$SYNERGY_HOME""_old/WEB-INF/web.xml" "$SYNERGY_HOME/WEB-INF/"
+ 	echo yes | cp -r "$SYNERGY_HOME""_old/WEB-INF/web.xml" "$SYNERGY_HOME/WEB-INF/"
 	if [ "$?" != "0" ]; then
 		echo "[Error] web.xml Copy failed! from Old WAR"
 		restore
@@ -476,7 +476,7 @@ compare_folder(){
 	if [ "$word" == "lib" ]; then
 		if [ -d "$dest_dir/WEB-INF/$word" ]; then
 			echo "Copying $word"
-			echo yes | cp -fru "$dest_dir/WEB-INF/$word/." "$source_dir/WEB-INF/$word"
+			echo yes | cp -r "$dest_dir/WEB-INF/$word/." "$source_dir/WEB-INF/$word"
 			if [ "$?" != "0" ]; then
 				echo "[Error] Merging failed!"
 				restore
@@ -485,7 +485,7 @@ compare_folder(){
 	else
 		if [ -d "$dest_dir/$word" ]; then
 			echo "Copying $word"
-			echo yes | cp -fru "$dest_dir/$word/." "$source_dir/$word"
+			echo yes | cp -r "$dest_dir/$word/." "$source_dir/$word"
 			if [ "$?" != "0" ]; then
 				echo "[Error] Merging failed!"
 				restore
@@ -500,7 +500,7 @@ compare_folder(){
 	if [ "$word" == "lib" ]; then
 		if [ -d "$source_dir/WEB-INF/$word" ]; then
 			echo "Copying $word"
-			echo yes | cp -fru "$source_dir/WEB-INF/$word/." "$SYNERGY_HOME/WEB-INF/$word/"
+			echo yes | cp -r "$source_dir/WEB-INF/$word/." "$SYNERGY_HOME/WEB-INF/$word/"
 			if [ "$?" != "0" ]; then
 				echo "[Error] Merging failed! to SYNERGY_HOME location"
 				restore
@@ -509,7 +509,7 @@ compare_folder(){
 	elif [ "$word" == "i18n" ]; then
 		if [ -d "$source_dir/WEB-INF/grails-app/$word" ]; then
 			echo "Copying $word"
-			echo yes | cp -fru "$source_dir/WEB-INF/grails-app/$word/." "$SYNERGY_HOME/WEB-INF/grails-app/$word/"
+			echo yes | cp -r "$source_dir/WEB-INF/grails-app/$word/." "$SYNERGY_HOME/WEB-INF/grails-app/$word/"
 			if [ "$?" != "0" ]; then
 				echo "[Error] Merging failed! to SYNERGY_HOME location"
 				restore
@@ -518,7 +518,7 @@ compare_folder(){
 	else
 		if [ -d "$source_dir/$word" ]; then
 		   echo "Copying $word"
-		   echo yes | cp -fru "$source_dir/$word/." "$SYNERGY_HOME/$word/"
+		   echo yes | cp -r "$source_dir/$word/." "$SYNERGY_HOME/$word/"
 		   if [ "$?" != "0" ]; then
 				echo "[Error] Merging failed! to SYNERGY_HOME location"
 				restore
