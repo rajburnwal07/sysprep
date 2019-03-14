@@ -1,5 +1,5 @@
 @ECHO OFF
-::::Version: CB_10.1.0
+::::Version: CB_10.1.2
 SETLOCAL ENABLEEXTENSIONS
 setlocal enabledelayedexpansion
 set STARTTIME=%TIME%
@@ -8,7 +8,7 @@ REM ::set SYNERGY_HOME="C:\apache-tomcat-8.0.46\webapps\cloudblue"
 REM ::set CATALINA_HOME="C:\apache-tomcat-8.0.46"
 ::##############################################################
 ::################### Initializing variables ###################
-set "Version=CB_10.1.0"
+set "Version=CB_10.1.2"
 set current_dir=%cd%
 set Compare_War_location=%CATALINA_HOME%\Compare_War
 set BACKUP_DIRECTORY_NAME=%date:~10,4%_%date:~4,2%_%date:~7,2%_%time:~0,2%_%time:~3,2%_%time:~6,2%_%time:~9,2%
@@ -36,11 +36,11 @@ if exist %order_location%\order.zip (
 )
 
 ::Checking Unzip is working or not
-unzip /? 2> nul
-if NOT %ERRORLEVEL% == 0 (
-	echo "Unzip is not working, please install unzip first"
-	goto :EOF
-)
+REM unzip /? 2> nul
+REM if NOT %ERRORLEVEL% == 0 (
+	REM echo "Unzip is not working, please install unzip first"
+	REM goto :EOF
+REM )
 ::##############################################################
 ::#### Values Used for Measuring the state of deployment #######
 :: * = File Not Exist, not upgraded
@@ -49,38 +49,38 @@ if NOT %ERRORLEVEL% == 0 (
 :: 2 = Deployment Completed, upgraded successfully
 ::##############################################################
 
-::######### Measuring the state of deployment ############
-if exist "%CATALINA_HOME%\deployment_status.txt" (
-	for /f "tokens=1 delims= " %%a in (%CATALINA_HOME%\deployment_status.txt) do (
-		set ds_value=%%a
-	)
-)else (
-	echo 0 > "%CATALINA_HOME%\deployment_status.txt"
-	for /f "tokens=1 delims= " %%a in (%CATALINA_HOME%\deployment_status.txt) do (
-		set ds_value=%%a
-	)
-)
-::###### Deployment state #######
-	2>NUL CALL :STATE_%ds_value% # jump to :STATE_0, :STATE_1, etc.
-	EXIT /B
-	:STATE_0
-		echo =================================================
-		echo Deployment Status: %ds_value%, Initial Stage, not upgraded	 
-		echo =================================================
-		GOTO :StartDeployment
+REM ::######### Measuring the state of deployment ############
+REM if exist "%CATALINA_HOME%\deployment_status.txt" (
+	REM for /f "tokens=1 delims= " %%a in (%CATALINA_HOME%\deployment_status.txt) do (
+		REM set ds_value=%%a
+	REM )
+REM )else (
+	REM echo 0 > "%CATALINA_HOME%\deployment_status.txt"
+	REM for /f "tokens=1 delims= " %%a in (%CATALINA_HOME%\deployment_status.txt) do (
+		REM set ds_value=%%a
+	REM )
+REM )
+REM ::###### Deployment state #######
+	REM 2>NUL CALL :STATE_%ds_value% # jump to :STATE_0, :STATE_1, etc.
+	REM EXIT /B
+	REM :STATE_0
+		REM echo =================================================
+		REM echo Deployment Status: %ds_value%, Initial Stage, not upgraded	 
+		REM echo =================================================
+		REM GOTO :StartDeployment
 	  
-	:STATE_1 
-		echo ============================================================================================
-		echo Deployment Status: %ds_value%, Backup Completed, but previous deployment failed need to restore first	 
-		echo ============================================================================================
-		GOTO :StartDeployment
+	REM :STATE_1 
+		REM echo ============================================================================================
+		REM echo Deployment Status: %ds_value%, Backup Completed, but previous deployment failed need to restore first	 
+		REM echo ============================================================================================
+		REM GOTO :StartDeployment
 		
-	:STATE_2 
-		echo ===========================================================================
-		echo Deployment Status: %ds_value%, Previous Deployment Completed, upgraded successfully	 
-		echo ===========================================================================
-		GOTO :StartDeployment
-::##############################################################
+	REM :STATE_2 
+		REM echo ===========================================================================
+		REM echo Deployment Status: %ds_value%, Previous Deployment Completed, upgraded successfully	 
+		REM echo ===========================================================================
+		REM GOTO :StartDeployment
+REM ::##############################################################
 
 :StartDeployment
 ::###### Taking Decision {Fresh, Upgrade:DF2War, War2War} #######
@@ -134,33 +134,34 @@ echo APP Name: %appname%
 		echo ======================================= 
 		echo =    ESCM-DataFiles to WAR Upgrade    =	 
 		echo =======================================
-		if "%ds_value%" == "1" (
-			call :error_restore
-		)
+		REM if "%ds_value%" == "1" (
+			REM call :error_restore
+		REM )
 		call :backup
-		echo 1 > "%CATALINA_HOME%\deployment_status.txt"
+		REM echo 1 > "%CATALINA_HOME%\deployment_status.txt"
 		call :extractorder
 		call :new_war_copy
 		call :df_copy
 		call :compare_folder "%Compare_War_location%\DF_WAR_Struct", "%Compare_War_location%\new_war"
 		call :rm_df
-		echo 2 > "%CATALINA_HOME%\deployment_status.txt"
+		REM echo 2 > "%CATALINA_HOME%\deployment_status.txt"
 		GOTO :END
 		
 	:CASE_3 
 		echo ============================
 		echo =    WAR to WAR Upgrade    =	 
 		echo ============================
-		if "%ds_value%" == "1" (
-			call :error_restore
-		)
-		call :backup
-		echo 1 > "%CATALINA_HOME%\deployment_status.txt"
+		REM if "%ds_value%" == "1" (
+			REM call :error_restore
+		REM )
+		REM call :backup
+		REM echo 1 > "%CATALINA_HOME%\deployment_status.txt"
 		call :extractorder
-		call :new_war_copy
-		call :old_war_copy
-		call :compare_folder "%Compare_War_location%\old_war", "%Compare_War_location%\new_war"
-		echo 2 > "%CATALINA_HOME%\deployment_status.txt"
+		REM call :new_war_copy
+		REM call :old_war_copy
+		REM call :compare_folder "%Compare_War_location%\old_war", "%Compare_War_location%\new_war"
+		REM echo 2 > "%CATALINA_HOME%\deployment_status.txt"
+		call :war2war_upgrade
 		GOTO :END
 
 ::##############################################################
@@ -535,6 +536,135 @@ exit /b
 
 exit /b
 ::*******************************************************************#
+
+::****************** WAR To WAR Upgrade Function *********************#
+:war2war_upgrade
+	mkdir "%Compare_War_location%\new_war\WEB-INF\grails-app\i18n"
+	mkdir "%Compare_War_location%\old_war\WEB-INF\grails-app\i18n"
+	
+	echo "Taking backup Customized CSS from SYNERGY HOME"
+	if exist "%SYNERGY_HOME%\css" move /Y "%SYNERGY_HOME%\css" "%Compare_War_location%\old_war\"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Taking backup Customized CSS from SYNERGY HOME failed!"
+		goto :EOF
+	)
+	
+	echo "Taking backup Customized Images from SYNERGY HOME"
+	if exist "%SYNERGY_HOME%\images" move /Y "%SYNERGY_HOME%\images" "%Compare_War_location%\old_war\"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Taking backup Customized Images from SYNERGY HOME failed!"
+		goto :EOF
+	)
+	
+	echo "Taking backup Customized web.xml from SYNERGY HOME"
+	copy /Y "%SYNERGY_HOME%\WEB-INF\web.xml" "%Compare_War_location%\old_war\WEB-INF\"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Taking backup Customized web.xml from SYNERGY HOME failed!"
+		goto :EOF
+	)
+	
+	echo "Taking backup Customized messages.properties from SYNERGY HOME"
+	move /Y "%SYNERGY_HOME%\WEB-INF\grails-app\i18n\messages.properties" "%Compare_War_location%\old_war\WEB-INF\grails-app\i18n\messages.properties"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] messages.properties Copy failed! from Old WAR"
+		goto :EOF
+	)
+	
+	echo Renaming Exsisting WAR to OLD from SYNERGY HOME Location
+	if exist %SYNERGY_HOME%.war move "%SYNERGY_HOME%.war" "%SYNERGY_HOME%_old.war"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Renaming Exsisting Old WAR failed!"
+		goto :EOF
+	)
+
+	echo "Deleting OLD files from SYNERGY HOME"
+	FOR /D %%i IN ("%SYNERGY_HOME%\*") DO (
+		if not "%%i"=="%SYNERGY_HOME%\branding" if not "%%i"=="%SYNERGY_HOME%\plugins" if not "%%i"=="%SYNERGY_HOME%\css" if not "%%i"=="%SYNERGY_HOME%\images" if not "%%i"=="%SYNERGY_HOME%\resources" if not "%%i"=="%SYNERGY_HOME%\WEB-INF" ( 
+			rd /s /q "%%i"
+			echo Deleting %%i
+		)
+	)
+
+	FOR /D %%i IN ("%SYNERGY_HOME%\WEB-INF\*") DO (
+		if not "%%i"=="%SYNERGY_HOME%\WEB-INF\lib" if not "%%i"=="%SYNERGY_HOME%\WEB-INF\grails-app" (
+			rd /s /q "%%i"
+			echo Deleting %%i
+		)
+	)
+
+	FOR /D %%i IN ("%SYNERGY_HOME%\WEB-INF\grails-app\*") DO (
+		if not "%%i"=="%SYNERGY_HOME%\WEB-INF\grails-app\i18n" (
+			rd /s /q "%%i"
+			echo Deleting %%i
+		)
+	)
+	
+	echo Copying New WAR to SYNERGY HOME Location
+	move "%current_dir%\order.war" "%SYNERGY_HOME%.war"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] New WAR Copy failed! to SYNERGY HOME Location"
+		goto :EOF
+	)
+	
+	del "%current_dir%\order.war"
+	echo Extracting New WAR
+	unzip -o "%SYNERGY_HOME%.war" -d "%SYNERGY_HOME%"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] New WAR Unzip failed!"
+		goto :EOF
+	)
+	
+	echo "Taking backup New messages.properties from New WAR"
+	move /Y "%SYNERGY_HOME%\WEB-INF\grails-app\i18n\messages.properties" "%Compare_War_location%\new_war\WEB-INF\grails-app\i18n\messages.properties"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] messages.properties Copy failed! from New WAR"
+		goto :EOF
+	)
+	
+
+	echo Comparing for extracting the Delta-WAR
+	cd "%current_dir%\lib"
+	"%JAVA_HOME%\bin\java" -jar CompareFile.jar "%Compare_War_location%\old_war\WEB-INF\grails-app\i18n" "%Compare_War_location%\new_war\WEB-INF\grails-app\i18n"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Comparing failed!"
+		goto :EOF
+	)
+	
+	echo "Replacing Customized CSS to SYNERGY HOME"
+	rd "%SYNERGY_HOME%\css" /s /q
+	if exist "%Compare_War_location%\old_war\css" move /Y "%Compare_War_location%\old_war\css" "%SYNERGY_HOME%\"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Replacing Customized CSS to SYNERGY HOME failed!"
+		goto :EOF
+	)
+	
+	echo "Replacing Customized Images to SYNERGY HOME"
+	rd "%SYNERGY_HOME%\images" /s /q
+	if exist "%Compare_War_location%\old_war\images" move /Y "%Compare_War_location%\old_war\images" "%SYNERGY_HOME%\"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Replacing Customized Images to SYNERGY HOME failed!"
+		goto :EOF
+	)
+	
+	echo "Replacing Customized web.xml to SYNERGY HOME"
+	copy /Y "%Compare_War_location%\old_war\WEB-INF\web.xml" "%SYNERGY_HOME%\WEB-INF\web.xml"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] Replacing Customized web.xml to SYNERGY HOME failed!"
+		goto :EOF
+	)
+	
+	echo "Replacing New Customized messages.properties to SYNERGY HOME"
+	move /Y "%Compare_War_location%\old_war\WEB-INF\grails-app\i18n\messages.properties" "%SYNERGY_HOME%\WEB-INF\grails-app\i18n\messages.properties"
+	if NOT %ERRORLEVEL% == 0 (
+		echo "[Error] messages.properties Copy failed! to New WAR"
+		goto :EOF
+	)
+	
+	del "%SYNERGY_HOME%_old.war"
+
+exit /b
+::*******************************************************************#
+
 
 ::****************** Merging ESCM-DataFiles/Old WAR & New War Function *********************#
 :compare_folder

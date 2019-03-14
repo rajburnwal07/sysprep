@@ -1,5 +1,5 @@
 #!/bin/bash
-####Version: CB_10.1.0
+####Version: CB_10.1.2
 begin=$(date +"%s")
 ################### User variables ###################
 SYNERGY_HOME="/usr/share/tomcat/webapps/escm"
@@ -7,7 +7,7 @@ CATALINA_HOME="/usr/share/tomcat"
 ##############################################################
 
 ################### Initializing variables ###################
-Version="CB_10.1.0"
+Version="CB_10.1.2"
 citools_location="$PWD"
 Compare_War_location="$CATALINA_HOME/Compare_War"
 BACKUP_DIRECTORY_NAME=$(date "+%d.%m.%Y-%H.%M.%S")
@@ -36,11 +36,11 @@ else
 fi
 
 ###Checking Unzip is working or not
-unzip >/dev/null 2>&1
-if [ "$?" != "0" ]; then
-	echo "Unzip is not working, please install unzip first"
-	exit 1
-fi
+# unzip >/dev/null 2>&1
+# if [ "$?" != "0" ]; then
+	# echo "Unzip is not working, please install unzip first"
+	# exit 1
+# fi
 
 #****************** Removing ESCM-DataFiles Content Function *********************#
 extractorder(){
@@ -453,6 +453,152 @@ new_war_copy(){
 }
 #*******************************************************************#
 
+#****************** WAR To WAR Upgrade Function *********************#
+war2war_upgrade(){
+	mkdir -p "$Compare_War_location/new_war/WEB-INF/grails-app/i18n"
+	mkdir -p "$Compare_War_location/old_war/WEB-INF/grails-app/i18n"
+	
+	echo "Taking backup Customized CSS from SYNERGY HOME"
+	if [ -d  "$SYNERGY_HOME/css" ]; then 
+		mv "$SYNERGY_HOME/css" "$Compare_War_location/old_war/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Taking backup Customized CSS from SYNERGY HOME failed!"
+		exit
+	fi
+	
+	echo "Taking backup Customized Images from SYNERGY HOME"
+	if [ -d  "$SYNERGY_HOME/images" ]; then 
+		mv "$SYNERGY_HOME/images" "$Compare_War_location/old_war/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Taking backup Customized images from SYNERGY HOME failed!"
+		exit
+	fi
+		
+	echo "Taking backup Customized web.xml from SYNERGY HOME"
+	if [ -f "$SYNERGY_HOME/WEB-INF/web.xml" ]; then 
+		mv "$SYNERGY_HOME/WEB-INF/web.xml" "$Compare_War_location/old_war/WEB-INF/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Taking backup Customized web.xml from SYNERGY HOME failed!"
+		exit
+	fi
+	
+	echo "Taking backup Customized messages.properties from SYNERGY HOME"
+	if [ -f "$SYNERGY_HOME/WEB-INF/grails-app/i18n/messages.properties" ]; then 
+		mv "$SYNERGY_HOME/WEB-INF/grails-app/i18n/messages.properties" "$Compare_War_location/old_war/WEB-INF/grails-app/i18n/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Taking backup Customized messages.properties from SYNERGY HOME failed!"
+		exit
+	fi
+	
+	echo Renaming Exsisting WAR to OLD from SYNERGY HOME Location
+	if [ -f  "$SYNERGY_HOME.war" ]; then 
+		mv "$SYNERGY_HOME.war" "$SYNERGY_HOME""_old.war"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Renaming Exsisting Old WAR failed!"
+		exit
+	fi
+
+	echo "Deleting OLD files from SYNERGY HOME"
+	for dir in $SYNERGY_HOME/*; do   
+		if ( [ "$dir" != "$SYNERGY_HOME/branding" ] && [ "$dir" != "$SYNERGY_HOME/css" ] && [ "$dir" != "$SYNERGY_HOME/images" ] && [ "$dir" != "$SYNERGY_HOME/plugins" ] && [ "$dir" != "$SYNERGY_HOME/resources" ] && [ "$dir" != "$SYNERGY_HOME/WEB-INF" ] ) ; then
+			rm -rf "$dir"
+			echo "Deleting $dir"
+		fi
+	done
+
+	for dir in $SYNERGY_HOME/WEB-INF/*; do
+		if ( [ "$dir" != "$SYNERGY_HOME/WEB-INF/grails-app" ] && [ "$dir" != "$SYNERGY_HOME/WEB-INF/lib" ] ) ; then
+			rm -rf "$dir"
+			echo "Deleting $dir"
+		fi
+	done
+
+	for dir in $SYNERGY_HOME/WEB-INF/grails-app/*; do  
+		if ( [ "$dir" != "$SYNERGY_HOME/WEB-INF/grails-app/i18n" ] ) ; then
+			rm -rf "$dir"
+			echo "Deleting $dir"
+		fi
+	done
+	
+	echo Copying New WAR to SYNERGY HOME Location
+	cp "$citools_location/order.war" "$SYNERGY_HOME.war"
+	if [ "$?" != "0" ]; then
+		echo "[Error] New WAR Copy failed!  to SYNERGY HOME Location"
+		exit
+	fi
+	rm -rf "$citools_location/order.war"
+	echo Extracting New WAR
+	unzip -o "$SYNERGY_HOME.war" -d "$SYNERGY_HOME"
+	if [ "$?" != "0" ]; then
+		echo "[Error] New WAR Unzip failed!"
+		exit
+	fi
+		
+	echo "Taking backup New messages.properties from New WAR"
+	if [ -f  "$SYNERGY_HOME/WEB-INF/grails-app/i18n/messages.properties" ]; then 
+		mv "$SYNERGY_HOME/WEB-INF/grails-app/i18n/messages.properties" "$Compare_War_location/new_war/WEB-INF/grails-app/i18n/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] messages.properties Copy failed! from New WAR"
+		exit
+	fi
+
+	echo Comparing for extracting the Delta-WAR
+	cd "$citools_location/lib"
+	java -jar CompareFile.jar "$Compare_War_location/old_war/WEB-INF/grails-app/i18n" "$Compare_War_location/new_war/WEB-INF/grails-app/i18n"
+	if [ "$?" != "0" ]; then
+		echo "[Error] Comparing failed!"
+		exit
+	fi
+		
+	echo "Replacing Customized CSS to SYNERGY HOME"
+	rm -rf "$SYNERGY_HOME/css"
+	if [ -d "$Compare_War_location/old_war/css" ]; then 
+		mv -f "$Compare_War_location/old_war/css" "$SYNERGY_HOME/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Replacing Customized CSS to SYNERGY HOME failed!"
+		exit
+	fi
+	
+	echo "Replacing Customized Images to SYNERGY HOME"
+	rm -rf "$SYNERGY_HOME/images"
+	if [ -d "$Compare_War_location/old_war/images" ]; then 
+		mv -f "$Compare_War_location/old_war/images" "$SYNERGY_HOME/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Replacing Customized Images to SYNERGY HOME failed!"
+		exit
+	fi
+		
+	echo "Replacing Customized web.xml to SYNERGY HOME"
+	if [ -f  "$Compare_War_location/old_war/WEB-INF/web.xml" ]; then 
+		mv "$Compare_War_location/old_war/WEB-INF/web.xml" "$SYNERGY_HOME/WEB-INF/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] Replacing Customized web.xml to SYNERGY HOME failed!"
+		exit
+	fi
+	
+	echo "Replacing New Customized messages.properties to SYNERGY HOME"
+	if [ -f  "$Compare_War_location/old_war/WEB-INF/grails-app/i18n/messages.properties" ]; then 
+		mv "$Compare_War_location/old_war/WEB-INF/grails-app/i18n/messages.properties" "$SYNERGY_HOME/WEB-INF/grails-app/i18n/"
+	fi
+	if [ "$?" != "0" ]; then
+		echo "[Error] messages.properties Copy failed! to New WAR"
+		exit
+	fi
+	
+	rm -rf "$SYNERGY_HOME""_old.war"
+
+}
+#*******************************************************************#
+
 #****************** Merging ESCM-DataFiles/Old WAR & New War Function *********************#
 compare_folder(){
 	echo Comparing Folders
@@ -570,35 +716,35 @@ rm_df(){
 ## 2 = Deployment Completed, upgraded successfully
 ################################################################
 
-######### Measuring the state of deployment ############
-if [ -f "$CATALINA_HOME/deployment_status.txt" ]; then
-	while read LINE; do ds_value="$LINE"; done < "$CATALINA_HOME/deployment_status.txt"
-else 
-	echo 0 > "$CATALINA_HOME/deployment_status.txt"
-	while read LINE; do ds_value="$LINE"; done < "$CATALINA_HOME/deployment_status.txt"
-fi
-###### Deployment state #######
-case "$ds_value" in                 ## case tells the deployment status
-            "0" )
-                echo =================================================
-				echo Deployment Status: "$ds_value", Initial Stage, not upgraded	 
-				echo =================================================
-                break                    
-                ;;
-            "1" )         
-                echo ============================================================================================
-				echo Deployment Status: "$ds_value", Backup Completed, but previous deployment failed need to restore first	 
-				echo ============================================================================================
-                break
-                ;;
-            "2" )
-                echo ===========================================================================
-				echo Deployment Status: "$ds_value", Previous Deployment Completed, upgraded successfully	 
-				echo ===========================================================================
-                break
-                ;;
-esac
-##############################################################
+######## Measuring the state of deployment ############
+# if [ -f "$CATALINA_HOME/deployment_status.txt" ]; then
+	# while read LINE; do ds_value="$LINE"; done < "$CATALINA_HOME/deployment_status.txt"
+# else 
+	# echo 0 > "$CATALINA_HOME/deployment_status.txt"
+	# while read LINE; do ds_value="$LINE"; done < "$CATALINA_HOME/deployment_status.txt"
+# fi
+##### Deployment state #######
+# case "$ds_value" in                 ## case tells the deployment status
+            # "0" )
+                # echo =================================================
+				# echo Deployment Status: "$ds_value", Initial Stage, not upgraded	 
+				# echo =================================================
+                # break                    
+                # ;;
+            # "1" )         
+                # echo ============================================================================================
+				# echo Deployment Status: "$ds_value", Backup Completed, but previous deployment failed need to restore first	 
+				# echo ============================================================================================
+                # break
+                # ;;
+            # "2" )
+                # echo ===========================================================================
+				# echo Deployment Status: "$ds_value", Previous Deployment Completed, upgraded successfully	 
+				# echo ===========================================================================
+                # break
+                # ;;
+# esac
+#############################################################
 
 ###### Taking Decision {Fresh, Upgrade:DF2War, War2War} #######
 if [ -d "$CATALINA_HOME/ESCM-DataFiles" ]; then     ##Checking ESCM-DataFiles exist
@@ -639,33 +785,34 @@ case "$flag" in                 ## case responds to flag
                 echo ======================================= 
 				echo =    ESCM-DataFiles to WAR Upgrade    =	 
 				echo =======================================
-				if [ "$ds_value" == "1" ]; then
-					error_restore
-				fi
+				# if [ "$ds_value" == "1" ]; then
+					# error_restore
+				# fi
 				backup
-				echo 1 > "$CATALINA_HOME/deployment_status.txt"
+				# echo 1 > "$CATALINA_HOME/deployment_status.txt"
 				extractorder
 				new_war_copy
 				df_copy
 				compare_folder "$Compare_War_location/DF_WAR_Struct" "$Compare_War_location/new_war"
 				rm_df
-				echo 2 > "$CATALINA_HOME/deployment_status.txt"
+				# echo 2 > "$CATALINA_HOME/deployment_status.txt"
                 break
                 ;;
             "3" )
                 echo ============================
 				echo =    WAR to WAR Upgrade    =	 
 				echo ============================
-				if [ "$ds_value" == "1" ]; then
-					error_restore
-				fi
-				backup
-				echo 1 > "$CATALINA_HOME/deployment_status.txt"
+				# if [ "$ds_value" == "1" ]; then
+					# error_restore
+				# fi
+				# backup
+				# echo 1 > "$CATALINA_HOME/deployment_status.txt"
 				extractorder
-				new_war_copy
-				old_war_copy
-				compare_folder "$Compare_War_location/old_war" "$Compare_War_location/new_war"
-				echo 2 > "$CATALINA_HOME/deployment_status.txt"
+				# new_war_copy
+				# old_war_copy
+				# compare_folder "$Compare_War_location/old_war" "$Compare_War_location/new_war"
+				# echo 2 > "$CATALINA_HOME/deployment_status.txt"
+				war2war_upgrade
                 break
                 ;;
 esac
