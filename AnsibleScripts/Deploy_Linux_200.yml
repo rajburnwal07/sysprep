@@ -1,0 +1,56 @@
+- name: Running a play in master node
+  hosts: master
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Setting Fact
+      set_fact:
+       CB_Version: "{{ CB_Version }}"
+       iso_location_server: "{{ iso_location_server }}"
+
+       binary_location: "/home/AutoDeployment"
+       master_node_ip: "{{ ansible_host }}"
+       master_node_user: "{{ ansible_ssh_user }}"
+       master_node_password: "{{ ansible_ssh_pass }}"
+       synergy_home: "/usr/share/tomcat/webapps/cloudblue"
+       catalina_home: "/usr/share/tomcat"
+
+ 
+    - name: Extracting ISO
+      shell: "{{ item }}"
+      with_items: 
+        - rm -rf {{ binary_location }}
+        - mkdir -p {{ binary_location }}
+        - 7z x -y -o"{{ binary_location }}" "{{ iso_location_server }}/{{ CB_Version }}.iso"
+    
+    - name: Unzip Portal contents
+      unarchive:
+        src: "{{ binary_location }}/ISO/Portal/{{ CB_Version }}.zip"
+        dest: "{{ binary_location }}/ISO/Portal/"
+
+
+- name: Running a play in worker node
+  hosts: workers
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Stop Tomcat
+      command: sh /usr/share/tomcat/bin/shutdown.sh
+    # - pause:
+        # seconds: 30
+
+    - name: Copy latest Portal from ISO to Remote nodes
+      shell: sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Portal/{{ hostvars['master'].CB_Version }}" /home/{{ hostvars['master'].CB_Version }}
+      shell: "{{ item }}"
+      with_items: 
+        - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Portal/{{ hostvars['master'].CB_Version }}" /home/{{ hostvars['master'].CB_Version }}
+        - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Utilities/CITools" /home/CITools
+        - chdir=/home/CITools ls 
+    
+    - name: Execute the deployment script
+      command: sh Deploy_Linux.sh "/home/{{ hostvars['master'].CB_Version }}/webapps/" >> LogUpgrade.log
+    
+    - name: Start Tomcat
+      command: nohup /usr/share/tomcat/bin/startup.sh
+      become: true
+      become_user: root
