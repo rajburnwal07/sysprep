@@ -1,4 +1,15 @@
 ---
+- hosts: master
+  become: yes
+  become_method: su
+  tasks:
+    - name: Installing Latest version of 7zip
+      yum:
+        name:
+          - p7zip
+          - p7zip-plugins
+        state: present
+
 - hosts: workers
   become: yes
   become_method: su
