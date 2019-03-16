@@ -16,12 +16,12 @@
        catalina_home: "/usr/share/tomcat"
 
  
-    - name: Extracting ISO
+    - name: Copy ISO Contents
       shell: "{{ item }}"
       with_items: 
         - rm -rf {{ binary_location }}
-        - mkdir -p {{ binary_location }}
-        - 7z x -y -o"{{ binary_location }}" "{{ iso_location_server }}/{{ CB_Version }}.iso"
+        - mkdir -p "{{ binary_location }}"
+        - cp -rp "{{ iso_location_server }}/ISO" "{{ binary_location }}/"
     
     - name: Unzip Portal contents
       unarchive:
