@@ -4,7 +4,8 @@
   become_method: su
   vars:
     tomcat_url: "https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.32/bin/apache-tomcat-8.5.32.tar.gz"
-    java_url: "https://mirror.its.sfu.ca/mirror/CentOS-Third-Party/NSG/common/x86_64/jdk-7u80-linux-x64.rpm"
+    ##java_url: "https://mirror.its.sfu.ca/mirror/CentOS-Third-Party/NSG/common/x86_64/jdk-7u80-linux-x64.rpm"
+    java_url: "https://mirror.its.sfu.ca/mirror/CentOS-Third-Party/RCG/common/x86_64/jdk-7u80-linux-x64.rpm"
   tasks:
     - name: Installing Latest version of Wget
       yum: pkg=wget state=latest
