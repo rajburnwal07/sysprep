@@ -4,11 +4,9 @@
   become_method: su
   tasks:
     - name: Installing Latest version of 7zip
-      yum:
-        name:
-          - p7zip
-          - p7zip-plugins
-        state: present
+      shell: "{{ item }}"
+      with_items: 
+        - sudo yum install -y git unzip sshpass p7zip p7zip-plugins
 
 - hosts: workers
   become: yes
