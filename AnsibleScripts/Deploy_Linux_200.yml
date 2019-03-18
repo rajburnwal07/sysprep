@@ -40,11 +40,12 @@
         # seconds: 30
 
     - name: Copy latest Portal from ISO to Remote nodes
-      shell: sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Portal/{{ hostvars['master'].CB_Version }}" /home/{{ hostvars['master'].CB_Version }}
       shell: "{{ item }}"
       with_items: 
-        - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Portal/{{ hostvars['master'].CB_Version }}" /home/{{ hostvars['master'].CB_Version }}
-        - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Utilities/CITools" /home/CITools
+        - rm -rf /home/CITools
+        - rm -rf /home/{{ hostvars['master'].CB_Version }}
+        - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -o StrictHostKeyChecking=no -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Portal/{{ hostvars['master'].CB_Version }}" /home/{{ hostvars['master'].CB_Version }}
+        - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -o StrictHostKeyChecking=no -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Utilities/CITools" /home/CITools
         - chdir=/home/CITools ls 
     
     - name: Execute the deployment script
