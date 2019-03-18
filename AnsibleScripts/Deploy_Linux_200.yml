@@ -50,7 +50,7 @@
         - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -o StrictHostKeyChecking=no -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Utilities/CITools" /home/CITools
     
     - name: Execute the deployment script
-      command: sh /home/CITools/Deploy_Linux.sh "/home/{{ hostvars['master'].CB_Version }}/webapps/" >> LogCloudBlue_{{date_time}}.log
+      command: sh /home/CITools/Deploy_Linux.sh "/home/{{ hostvars['master'].CB_Version }}/webapps/"
     
     - name: Start Tomcat
       command: nohup /usr/share/tomcat/bin/startup.sh
