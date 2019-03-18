@@ -33,6 +33,8 @@
   hosts: workers
   become: yes
   gather_facts: true
+  vars:
+    date_time: "{{ lookup('pipe','date +%Y-%m-%d-%H-%M-%S') }}"
   tasks:
     - name: Stop Tomcat
       command: sh /usr/share/tomcat/bin/shutdown.sh
@@ -46,10 +48,9 @@
         - rm -rf /home/{{ hostvars['master'].CB_Version }}
         - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -o StrictHostKeyChecking=no -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Portal/{{ hostvars['master'].CB_Version }}" /home/{{ hostvars['master'].CB_Version }}
         - sshpass -p "{{ hostvars['master'].master_node_password }}" scp -o StrictHostKeyChecking=no -r "{{ hostvars['master'].master_node_user }}"@"{{ hostvars['master'].master_node_ip }}":"{{ hostvars['master'].binary_location }}/ISO/Utilities/CITools" /home/CITools
-        - chdir=/home/CITools ls 
     
     - name: Execute the deployment script
-      command: sh Deploy_Linux.sh "/home/{{ hostvars['master'].CB_Version }}/webapps/" >> LogUpgrade.log
+      command: sh /home/CITools/Deploy_Linux.sh "/home/{{ hostvars['master'].CB_Version }}/webapps/" >> LogCloudBlue_{{date_time}}.log
     
     - name: Start Tomcat
       command: nohup /usr/share/tomcat/bin/startup.sh
