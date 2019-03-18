@@ -20,8 +20,8 @@
       yum: pkg=wget state=latest
     - name: Installing sshpass
       yum: pkg=sshpass state=latest
-    - name: Installing rsync
-      yum: pkg=rsync state=latest
+    - name: Installing unzip
+      yum: pkg=unzip state=latest
     
     - name: Checking Java-1.7.80 already downloaded
       stat:
