@@ -6,7 +6,7 @@
     - name: Installing Latest version of 7zip
       shell: "{{ item }}"
       with_items: 
-        - sudo yum install -y git unzip sshpass p7zip p7zip-plugins
+        - sudo yum install p7zip p7zip-plugins
 
 - hosts: workers
   become: yes
