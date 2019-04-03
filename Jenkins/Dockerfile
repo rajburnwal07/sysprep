@@ -8,7 +8,7 @@ RUN echo "jenkins ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN mv /usr/share/jenkins/jenkins.war /usr/share/jenkins/jenkins.war.bak
 
-RUN wget http://updates.jenkins-ci.org/download/war/2.164.1/jenkins.war
+RUN wget http://updates.jenkins-ci.org/download/war/2.150.1/jenkins.war
 RUN mv ./jenkins.war /usr/share/jenkins
 RUN chown jenkins:jenkins /usr/share/jenkins/jenkins.war
 
