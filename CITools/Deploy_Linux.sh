@@ -556,25 +556,25 @@ war2war_upgrade(){
 		exit
 	fi
 		
-	echo "Replacing Customized CSS to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/css"
-	if [ -d "$Compare_War_location/old_war/css" ]; then 
-		mv -f "$Compare_War_location/old_war/css" "$SYNERGY_HOME/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Replacing Customized CSS to SYNERGY HOME failed!"
-		exit
-	fi
+	#echo "Replacing Customized CSS to SYNERGY HOME"
+	#rm -rf "$SYNERGY_HOME/css"
+	#if [ -d "$Compare_War_location/old_war/css" ]; then 
+		#mv -f "$Compare_War_location/old_war/css" "$SYNERGY_HOME/"
+	#fi
+	#if [ "$?" != "0" ]; then
+		#echo "[Error] Replacing Customized CSS to SYNERGY HOME failed!"
+		#exit
+	#fi
 	
-	echo "Replacing Customized Images to SYNERGY HOME"
-	rm -rf "$SYNERGY_HOME/images"
-	if [ -d "$Compare_War_location/old_war/images" ]; then 
-		mv -f "$Compare_War_location/old_war/images" "$SYNERGY_HOME/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] Replacing Customized Images to SYNERGY HOME failed!"
-		exit
-	fi
+	#echo "Replacing Customized Images to SYNERGY HOME"
+	#rm -rf "$SYNERGY_HOME/images"
+	#if [ -d "$Compare_War_location/old_war/images" ]; then 
+		#mv -f "$Compare_War_location/old_war/images" "$SYNERGY_HOME/"
+	#fi
+	#if [ "$?" != "0" ]; then
+		#echo "[Error] Replacing Customized Images to SYNERGY HOME failed!"
+		#exit
+	#fi
 		
 	echo "Replacing Customized web.xml to SYNERGY HOME"
 	if [ -f  "$Compare_War_location/old_war/WEB-INF/web.xml" ]; then 
@@ -585,14 +585,14 @@ war2war_upgrade(){
 		exit
 	fi
 	
-	echo "Replacing New Customized messages.properties to SYNERGY HOME"
-	if [ -f  "$Compare_War_location/old_war/WEB-INF/grails-app/i18n/messages.properties" ]; then 
-		mv "$Compare_War_location/old_war/WEB-INF/grails-app/i18n/messages.properties" "$SYNERGY_HOME/WEB-INF/grails-app/i18n/"
-	fi
-	if [ "$?" != "0" ]; then
-		echo "[Error] messages.properties Copy failed! to New WAR"
-		exit
-	fi
+	#echo "Replacing New Customized messages.properties to SYNERGY HOME"
+	#if [ -f  "$Compare_War_location/old_war/WEB-INF/grails-app/i18n/messages.properties" ]; then 
+		#mv "$Compare_War_location/old_war/WEB-INF/grails-app/i18n/messages.properties" "$SYNERGY_HOME/WEB-INF/grails-app/i18n/"
+	#fi
+	#if [ "$?" != "0" ]; then
+		#echo "[Error] messages.properties Copy failed! to New WAR"
+		#exit
+	#fi
 	
 	rm -rf "$SYNERGY_HOME""_old.war"
 
